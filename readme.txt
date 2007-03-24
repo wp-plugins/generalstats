@@ -14,6 +14,8 @@ Count the number of users, categories, posts, comments, pages, words in posts, w
 
 **full-optionpage-configurable, easy to integrate**
 
+Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org/generalstats/branches/wordpress%20minor%202.1/)
+
 == Installation ==
 
 1. Put both the general-stats.php file in your WordPress plugins directory (usually wp-content/plugins).

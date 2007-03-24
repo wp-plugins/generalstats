@@ -1,7 +1,7 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: http://www.neotrinity.at/projects/
-Tags: Statistics, Stats, Counting, Count
+Tags: statistics, stats, counting, count
 Requires at least: 2.1
 Tested up to: 2.1
 Stable tag: trunk

@@ -3,7 +3,7 @@ Contributors: neoxx
 Donate link: http://www.neotrinity.at/projects/
 Tags: statistics, stats, counting, count
 Requires at least: 2.1
-Tested up to: 2.1
+Tested up to: 2.1.3
 Stable tag: trunk
 
 Count the number of users, categories, posts, comments, pages, words in posts, words in comments and words in pages.

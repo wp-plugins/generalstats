@@ -28,3 +28,9 @@ Feel free to play around and see the result in the section preview at the bottom
 4. Put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
 
 5. Drink a beer, smoke a cigarette or celebrate in a way you like!
+
+== Screenshots ==
+
+1. This screenshot optionspage_tags.png shows the Options/GeneralStats Tab with the available tags in the admin menu.
+
+2. On this screenshot optionspage_csstags_preview.png the available csstags as well as the preview section can be seen.

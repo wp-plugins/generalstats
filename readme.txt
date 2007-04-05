@@ -25,7 +25,6 @@ Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org
 3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it.
 Feel free to play around and see the result in the section preview at the bottom of the options page.
 
-4. Put this code into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear:
-`<?php GeneralStatsComplete(); ?>`
+4. Put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
 
 5. Drink a beer, smoke a cigarette or celebrate in a way you like!

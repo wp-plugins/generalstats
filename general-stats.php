@@ -269,14 +269,14 @@ function createGeneralStatsOptionPage() {
      */
     ?>
 
-     <div class=wrap>
+     <div class="wrap">
        <form method="post">
          <h2>Tags</h2>
 
      <?php
 
      foreach ($fields as $field) {
-          echo("<fieldset name=\"".$field."\">");
+          echo("<fieldset>");
             echo("<legend>");
             _e($field);
             echo("</legend>");
@@ -292,7 +292,7 @@ function createGeneralStatsOptionPage() {
      <?php
 
      foreach ($csstags as $csstag) {
-          echo("<fieldset name=\"".$csstag."\">");
+          echo("<fieldset>");
             echo("<legend>");
             _e($csstag);
             echo("</legend>");
@@ -302,7 +302,7 @@ function createGeneralStatsOptionPage() {
 
      ?>
 
-     <fieldset name="nice_numbers">
+     <fieldset>
         <legend><?php _e('Thousand Delimiter') ?></legend>
             <input type="text" size="2" name="Thousand_Delimiter" value="<?php echo get_option('Thousand_Delimiter'); ?>" />
       </fieldset>

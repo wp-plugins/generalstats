@@ -31,6 +31,6 @@ Feel free to play around and see the result in the section preview at the bottom
 
 == Screenshots ==
 
-1. The screenshot `optionspage_tags.png` shows the Options/GeneralStats Tab with the available tags in the admin menu.
+1. The first screenshot shows the Options/GeneralStats Tab with the available tags in the admin menu.
 
-2. On the screenshot `optionspage_csstags_preview.png` the available csstags as well as the preview section can be seen.
+2. On the second screenshot the available csstags as well as the preview section can be seen.

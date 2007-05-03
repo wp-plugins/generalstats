@@ -152,14 +152,14 @@ function GeneralStatsComplete() {
     */
 
     $orders=array();
-    if (get_option('Users_Position')!="") $orders[0] = get_option('GeneralStats_Users_Position');
-    if (get_option('Categories_Position')!="") $orders[1] = get_option('GeneralStats_Categories_Position');
-    if (get_option('Posts_Position')!="") $orders[2] = get_option('GeneralStats_Posts_Position');
-    if (get_option('Comments_Position')!="") $orders[3] = get_option('GeneralStats_Comments_Position');
-    if (get_option('Pages_Position')!="") $orders[4] = get_option('GeneralStats_Pages_Position');
-    if (get_option('Words_in_Posts_Position')!="") $orders[10] = get_option('GeneralStats_Words_in_Posts_Position');
-    if (get_option('Words_in_Comments_Position')!="") $orders[11] = get_option('GeneralStats_Words_in_Comments_Position');
-    if (get_option('Words_in_Pages_Position')!="") $orders[12] = get_option('GeneralStats_Words_in_Pages_Position');
+    if (get_option('GeneralStats_Users_Position')!="") $orders[0] = get_option('GeneralStats_Users_Position');
+    if (get_option('GeneralStats_Categories_Position')!="") $orders[1] = get_option('GeneralStats_Categories_Position');
+    if (get_option('GeneralStats_Posts_Position')!="") $orders[2] = get_option('GeneralStats_Posts_Position');
+    if (get_option('GeneralStats_Comments_Position')!="") $orders[3] = get_option('GeneralStats_Comments_Position');
+    if (get_option('GeneralStats_Pages_Position')!="") $orders[4] = get_option('GeneralStats_Pages_Position');
+    if (get_option('GeneralStats_Words_in_Posts_Position')!="") $orders[10] = get_option('GeneralStats_Words_in_Posts_Position');
+    if (get_option('GeneralStats_Words_in_Comments_Position')!="") $orders[11] = get_option('GeneralStats_Words_in_Comments_Position');
+    if (get_option('GeneralStats_Words_in_Pages_Position')!="") $orders[12] = get_option('GeneralStats_Words_in_Pages_Position');
 
     /*
     sort as wished

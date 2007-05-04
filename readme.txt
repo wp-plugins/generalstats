@@ -1,7 +1,7 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: http://www.neotrinity.at/projects/
-Tags: statistics, stats, counting, count
+Tags: statistics, stats, counting, count, widget
 Requires at least: 2.1
 Tested up to: 2.1.3
 Stable tag: trunk

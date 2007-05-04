@@ -3,9 +3,9 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Count the number of users, categories, posts, comments, pages, words in posts, words in comments and words in pages. - Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Count the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.30 (beta)
+Version: 0.31 (beta)
 Author URI: http://www.neotrinity.at
 */
 
@@ -24,39 +24,6 @@ Author URI: http://www.neotrinity.at
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-
-/*
-
-An example-configuration for a weblog with 27598 Users:
-
-== Configuration-Page ==
-
-= Tags =
- * Users:
-   - Position: 1
-   - Description: Users
-
-= CSS-Tags =
- * before_List: <ul>
- * after_List: </ul>
-
- * before_Tag: <li><em>
- * after_Tag: </em>:
-
- * before_Details: <strong>
- * after_Details: </strong></li>
-
- * Thousand Delimiter: ,
-
-== Output ==
-
-<ul>
-	<li>
-		<em>Users</em>: <strong>27,598</strong>
-	</li>
-</ul>
-
 */
 
 
@@ -89,7 +56,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.30\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.31\"/>");
 }
 
 /*
@@ -157,6 +124,7 @@ function GeneralStatsComplete() {
     if (get_option('GeneralStats_Posts_Position')!="") $orders[2] = get_option('GeneralStats_Posts_Position');
     if (get_option('GeneralStats_Comments_Position')!="") $orders[3] = get_option('GeneralStats_Comments_Position');
     if (get_option('GeneralStats_Pages_Position')!="") $orders[4] = get_option('GeneralStats_Pages_Position');
+    if (get_option('GeneralStats_Links_Position')!="") $orders[5] = get_option('GeneralStats_Links_Position');
     if (get_option('GeneralStats_Words_in_Posts_Position')!="") $orders[10] = get_option('GeneralStats_Words_in_Posts_Position');
     if (get_option('GeneralStats_Words_in_Comments_Position')!="") $orders[11] = get_option('GeneralStats_Words_in_Comments_Position');
     if (get_option('GeneralStats_Words_in_Pages_Position')!="") $orders[12] = get_option('GeneralStats_Words_in_Pages_Position');
@@ -197,6 +165,9 @@ function GeneralStatsComplete() {
           case 4;
               $tag=get_option('GeneralStats_Pages_Description');
               break;
+          case 5;
+              $tag=get_option('GeneralStats_Links_Description');
+              break;
           case 10;
               $tag=get_option('GeneralStats_Words_in_Posts_Description');
               break;
@@ -230,6 +201,7 @@ Param: $option
 		2..posts
 		3..comments
 		4..pages
+		5..links
 		10..words in posts
 		11..words in comments
 		12..words in pages
@@ -256,6 +228,9 @@ function GeneralStatsCounter($option) {
         	break;
         case 4:
                 $statement = "SELECT COUNT(ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'";
+        	break;
+        case 5:
+                $statement = "SELECT COUNT(link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'";
         	break;
         case 10:
         	$statement = "SELECT post_content FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'";
@@ -303,8 +278,12 @@ Option Page
 
 function createGeneralStatsOptionPage() {
 
-    $fields=array("GeneralStats_Users", "GeneralStats_Categories", "GeneralStats_Posts", "GeneralStats_Comments", "GeneralStats_Pages", "GeneralStats_Words_in_Posts", "GeneralStats_Words_in_Comments", "GeneralStats_Words_in_Pages");
+    $fields=array("GeneralStats_Users", "GeneralStats_Categories", "GeneralStats_Posts", "GeneralStats_Comments", "GeneralStats_Pages", "GeneralStats_Links", "GeneralStats_Words_in_Posts", "GeneralStats_Words_in_Comments", "GeneralStats_Words_in_Pages");
     $csstags=array("GeneralStats_before_List", "GeneralStats_after_List", "GeneralStats_before_Tag", "GeneralStats_after_Tag", "GeneralStats_before_Details", "GeneralStats_after_Details");
+
+    $fields_position_defaults=array("1", "", "2", "3", "4", "", "", "", "");
+    $fields_description_defaults=array("Users", "", "Posts", "Comments", "Pages", "", "", "", "");
+    $csstags_defaults=array("<ul>", "</ul>", "<li><em>", "</em>&nbsp;", "", "</li>");
 
     /*
     configuration changed => store parameters
@@ -325,13 +304,35 @@ function createGeneralStatsOptionPage() {
 
         ?><div class="updated"><p><strong>
         <?php _e('Configuration changed!')?></strong></p></div>
-     <?php }?>
+
+      <?php }
+
+      elseif (isset($_POST['load_default'])) {
+
+        for ($i = 0; $i < sizeof($csstags); $i++) {
+            update_option($csstags[$i], $csstags_defaults[$i]);
+        }
+
+        for ($i = 0; $i < sizeof($fields); $i++) {
+            update_option($fields[$i]."_Position", $fields_position_defaults[$i]);
+        }
+
+        for ($i = 0; $i < sizeof($fields); $i++) {
+            update_option($fields[$i]."_Description", $fields_description_defaults[$i]);
+        }
+
+	  update_option('GeneralStats_Thousand_Delimiter', ',');
+
+        ?><div class="updated"><p><strong>
+        <?php _e('Defaults loaded!')?></strong></p></div>
+
+      <?php } ?>
 
      <?php
      /*
      options form
      */
-    ?>
+     ?>
 
      <div class="wrap">
        <form method="post">
@@ -375,7 +376,10 @@ function createGeneralStatsOptionPage() {
     <?php GeneralStatsComplete(); ?>
 
     <div class="submit">
-      <input type="submit" name="info_update" value="<?php _e('Update options') ?>" /></div>
+      <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />
+      <input type="submit" name="load_default" value="<?php _e('Load defaults') ?>" />
+    </div>
+
     </form>
     </div>
 

@@ -6,11 +6,11 @@ Requires at least: 2.1
 Tested up to: 2.1.3
 Stable tag: trunk
 
-Count the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
+Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
 
 == Description ==
 
-Count the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
+Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
 
 **fully-optionpage-configurable, easy to integrate (now ships with widget functionality)**
 

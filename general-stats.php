@@ -3,7 +3,7 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Count the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
 Version: 0.31 (beta)
 Author URI: http://www.neotrinity.at

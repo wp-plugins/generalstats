@@ -18,7 +18,7 @@ Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org
 
 == Installation ==
 
-1. Put the general-stats.php file in your WordPress plugins directory (usually wp-content/plugins).
+1. Copy the generalstats directory in your WordPress plugins directory (usually wp-content/plugins).
 
 2. In the WordPress admin console, go to the Plugins tab, and activate the GeneralStats plugin.
 

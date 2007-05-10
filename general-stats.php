@@ -3,9 +3,9 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.31 (beta)
+Version: 0.32 (beta)
 Author URI: http://www.neotrinity.at
 */
 
@@ -56,7 +56,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.31\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.32\"/>");
 }
 
 /*
@@ -94,7 +94,7 @@ function widget_generalstats_control() {
 		
 		echo '<p style="text-align:right;"><label for="generalstats-title">' . __('Title:') . ' <input style="width: 200px;" id="generalstats-title" name="generalstats-title" type="text" value="'.$title.'" /></label></p>';
 		echo '<input type="hidden" id="generalstats-submit" name="generalstats-submit" value="1" />';
-		echo '<p style="text-align:left;"><label for="generalstats-options">Find the options <a href="/wp-admin/options-general.php?page=generalstats/general-stats.php">here</a>!</label></p>';
+		echo '<p style="text-align:left;"><label for="generalstats-options">Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!</label></p>';
 	}
 
 /*

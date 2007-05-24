@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.32 (beta)
+Version: 0.40 (beta)
 Author URI: http://www.neotrinity.at
 */
 
@@ -56,7 +56,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.32\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.40\"/>");
 }
 
 /*
@@ -98,10 +98,51 @@ function widget_generalstats_control() {
 	}
 
 /*
-echos stats as defined in the option page
+echoes stats as defined in the option page
+handles the cache-management
 */
 
 function GeneralStatsComplete() {
+
+	$cacheTime = get_option('GeneralStats_Cache_Time');
+	$lastCacheTime = get_option('GeneralStats_Last_Cache_Time');
+
+	$cacheAge = time() - $lastCacheTime;
+
+	$cache = get_option('GeneralStats_Cache');
+	$forceCacheRefresh = get_option('GeneralStats_Force_Cache_Refresh');
+
+	//the cache is refreshed if cache refreshing is forced, the cache is empty
+	//or the age of the cache is older then the defined caching time
+
+	if ( ($forceCacheRefresh > 0) ||
+	     (strlen($cache) < 1) ||
+	     ($cacheAge>$cacheTime) ) {
+
+		update_option('GeneralStats_Cache', GeneralStatsCreateOutput());
+		update_option('GeneralStats_Force_Cache_Refresh','0');
+		update_option('GeneralStats_Last_Cache_Time',time());
+	}
+
+	echo get_option('GeneralStats_Cache');
+
+}
+
+/*
+force cache refresh
+*/
+
+function GeneralStatsForceCacheRefresh() {
+	update_option('GeneralStats_Force_Cache_Refresh', '1'); 
+}
+
+/*
+generates the formated output
+*/
+
+function GeneralStatsCreateOutput() {
+
+    $ret="";
 
     /*
     get general tags
@@ -139,7 +180,7 @@ function GeneralStatsComplete() {
     begin list
     */
 
-    echo($before_list);
+    $ret.=($before_list);
 
     /*
     loop through desired stats
@@ -181,7 +222,7 @@ function GeneralStatsComplete() {
 
         $count=number_format($count,'0','',get_option('GeneralStats_Thousand_Delimiter'));
 
-        echo $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
+        $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
 
     }
 
@@ -189,7 +230,9 @@ function GeneralStatsComplete() {
     finish list
     */
 
-    echo($after_list);
+    $ret.=($after_list);
+
+    return $ret;
 
 }
 
@@ -233,34 +276,79 @@ function GeneralStatsCounter($option) {
                 $statement = "SELECT COUNT(link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'";
         	break;
         case 10:
-        	$statement = "SELECT post_content FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'";
+        	    $statement = "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'";
+		    $attribute = "post_content";
+		    $countAttribute = "ID";
         	break;
         case 11:
-                $statement = "SELECT comment_content FROM $wpdb->comments WHERE comment_approved = '1'";
+                $statement = "FROM $wpdb->comments WHERE comment_approved = '1'";
+		    $attribute = "comment_content";
+		    $countAttribute = "comment_ID";
         	break;
         case 12:
-                $statement = "SELECT post_content FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'";
+                $statement = "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'";
+		    $attribute = "post_content";
+		    $countAttribute = "ID";
         	break;
       }
 
-      $results = $wpdb->get_col($statement);
 
       /*
       for values between 10 and 20 is a calculation needed
       */
 
       if ($option>=10 && $option<=20) {
-        	for ($i=0; $i<count($results); $i++) {
-        		$result += str_word_count($results[$i]);
-                }
+		$result=GeneralStats_WordCount($statement, $attribute, $countAttribute);
       }
 
       else {
-                $result=$results[0];
+	      $results = $wpdb->get_col($statement);
+		$result=$results[0];
       }
 
       return $result;
 }
+
+/*
+counts the words of posts, comments or pages
+decreasing memory usage by incrementing limit statements
+*/
+
+function GeneralStats_WordCount($statement, $attribute, $countAttribute) {
+
+      global $wpdb;
+      $result=0;
+
+	$rows_at_Once=get_option('GeneralStats_Rows_at_Once');
+
+	$countStatement = "SELECT COUNT(".$countAttribute.") " .$statement;
+	$counter = $wpdb->get_col($countStatement);
+	$counter = $counter[0];
+	$startLimit = 0;
+
+	//if rows_at_Once is not or incorrect set
+	if ($rows_at_Once<1) {
+		$rows_at_Once=$counter;
+	}
+
+	$incrementStatement = "SELECT ".$attribute." ".$statement;
+
+	//loop through the sql-statements
+	while( $startLimit < $counter) {
+
+		$results = $wpdb->get_col($incrementStatement." LIMIT ".$startLimit.", ".$rows_at_Once);
+
+		//count the words for each statement
+		for ($i=0; $i<count($results); $i++) {
+			$result += str_word_count($results[$i]);
+		}
+
+		$startLimit+=$rows_at_Once;
+	}
+
+	return $result;
+}
+
 
 /*
 add GeneralStats to WordPress Option Page
@@ -302,8 +390,11 @@ function createGeneralStatsOptionPage() {
 
         update_option('GeneralStats_Thousand_Delimiter', $_POST['GeneralStats_Thousand_Delimiter']);
 
+        update_option('GeneralStats_Cache_Time', $_POST['GeneralStats_Cache_Time']);
+        update_option('GeneralStats_Rows_at_Once', $_POST['GeneralStats_Rows_at_Once']);
+
         ?><div class="updated"><p><strong>
-        <?php _e('Configuration changed!')?></strong></p></div>
+        <?php _e('Configuration changed!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
       <?php }
 
@@ -323,8 +414,11 @@ function createGeneralStatsOptionPage() {
 
 	  update_option('GeneralStats_Thousand_Delimiter', ',');
 
+	  update_option('GeneralStats_Cache_Time', '600');
+	  update_option('GeneralStats_Rows_at_Once', '100');
+
         ?><div class="updated"><p><strong>
-        <?php _e('Defaults loaded!')?></strong></p></div>
+        <?php _e('Defaults loaded!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
       <?php } ?>
 
@@ -370,6 +464,18 @@ function createGeneralStatsOptionPage() {
      <fieldset>
         <legend><?php _e('GeneralStats_Thousand Delimiter') ?></legend>
             <input type="text" size="2" name="GeneralStats_Thousand_Delimiter" value="<?php echo get_option('GeneralStats_Thousand_Delimiter'); ?>" />
+      </fieldset>
+
+        <h2>Administrative Options</h2>
+
+     <fieldset>
+        <legend><?php _e('GeneralStats_Cache Time (in seconds)') ?></legend>
+            <input type="text" size="2" name="GeneralStats_Cache_Time" value="<?php echo get_option('GeneralStats_Cache_Time'); ?>" />
+      </fieldset>
+
+     <fieldset>
+        <legend><?php _e('GeneralStats_Rows at Once (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></legend>
+            <input type="text" size="2" name="GeneralStats_Rows_at_Once" value="<?php echo get_option('GeneralStats_Rows_at_Once'); ?>" />
       </fieldset>
 
     <h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>

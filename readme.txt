@@ -12,7 +12,7 @@ Counts the number of users, categories, posts, comments, pages, links, words in 
 
 Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
 
-**fully-optionpage-configurable, easy to integrate (now ships with widget functionality)**
+**fully-optionpage-configurable, easy to integrate (now ships with widget functionality), high performing with caching technology and customizable memory usage**
 
 Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org/generalstats/branches/wordpress%20minor%202.1/)
 
@@ -39,7 +39,11 @@ Thanks for not swearing. ;) Due to the naming conventions I renamed the form fie
 
 = I get the error message 'Fatal error: Allowed memory size of n bytes exhausted (tried to allocate n bytes) in /wp-includes/wp-db.php on line n'. - What's wrong? =
 
-Some attributes, especially the ones which count words in something need much memory and cpu-time to execute. - You should either disable these functions or ask your webhost to allocate more resources for your account. - Generally, all other functions like posts, users, etc. should even work on larger weblogs without problems.
+Some attributes, especially the ones which count "words in something", need much memory and cpu-time to execute. Hence, I implemented a work-around in version 0.40. - So, just update and retry. - Now it should work for medium-sized weblogs, too!
+
+For performance optimization, you can play around with the "Rows at once" parameter, which represents the number of database rows processed at once. In other words if your weblog consists of 1,200 comments and you want to count the words in comments with a "Rows at once" value set to 100, it will take 12 sql-queries. This may be much or less, depending on your provider's environment and the size of your weblog. Hence, this setting cannot be automatically calculated, because it is not predictable. So, it is up to you to optimize this setting.
+
+Nevertheless, for smaller weblogs the default value of 100 should be appropriate.
 
 == Screenshots ==
 

@@ -43,7 +43,7 @@ Some attributes, especially the ones which count "words in something", need much
 
 For performance optimization, you can play around with the "Rows at once" parameter, which represents the number of database rows processed at once. In other words if your weblog consists of 1,200 comments and you want to count the words in comments with a "Rows at once" value set to 100, it will take 12 sql-queries. This may be much or less, depending on your provider's environment and the size of your weblog. Hence, this setting cannot be automatically calculated, because it is not predictable. So, it is up to you to optimize this setting.
 
-Nevertheless, for smaller weblogs the default value of 100 should be appropriate.
+Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should be appropriate.
 
 == Screenshots ==
 

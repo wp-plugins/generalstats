@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.40 (beta)
+Version: 0.50
 Author URI: http://www.neotrinity.at
 */
 
@@ -43,12 +43,87 @@ function generalstats_init() {
 }
 
 /*
+loads the necessary java-scripts,
+which are all included in wordpress >= 2.1
+for the admin-page
+*/
+
+function generalstats_admin_print_scripts() {
+	wp_enqueue_script('scriptaculous-effects');
+	wp_enqueue_script('scriptaculous-dragdrop');
+}
+
+/*
+loads the necessary css-styles
+for the admin-page
+*/
+
+function generalstats_admin_head() {
+
+?>
+
+     <style type="text/css">
+
+      li.generalstats_sortablelist {
+  		background-color : #14568a;
+		color: #c3def1;
+		cursor : move;
+		padding: 3px 5px 3px 5px;
+      }
+
+      ul.generalstats_sortablelist {
+		float: left;
+		border: 1px dotted;
+		list-style-image : none;
+		list-style-type : none;
+		margin: 10px 20px 20px 30px;
+		padding: 10px;
+      }
+
+      #generalstats_DragandDrop{
+		cursor : move;
+		margin: 10px 140px 0px 0px;
+		float: right;
+		border: 1px dotted;
+		width: 175px;
+		padding: 5px;
+      }
+
+      #generalstats_DragandDrop_Change{
+		margin-top: 10px;
+		background: url( images/fade-butt.png );
+		border: 3px double #999;
+		border-left-color: #ccc;
+		border-top-color: #ccc;
+		color: #333;
+		padding: 0.25em;
+		width: 150px;
+		text-align: center;
+      }
+
+	#generalstats_DragandDrop_Change:active {
+		background: #f4f4f4;
+		border: 3px double #ccc;
+		border-left-color: #999;
+		border-top-color: #999;
+	}
+
+      </style>
+
+<?php
+
+}
+
+/*
 called from widget_init hook
 */
 
 function widget_generalstats_init() {
-	register_sidebar_widget(array('GeneralStats', 'widgets'), 'widget_generalstats');
-	register_widget_control(array('GeneralStats', 'widgets'), 'widget_generalstats_control', 300, 100);
+	$plugin_name="GeneralStats";
+	$widgets="widgets";
+
+	register_sidebar_widget(array($plugin_name, $widgets), 'widget_generalstats');
+	register_widget_control(array($plugin_name, $widgets), 'widget_generalstats_control', 300, 100);
 }
 
 /*
@@ -56,7 +131,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.40\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.50\"/>");
 }
 
 /*
@@ -81,19 +156,23 @@ widget control
 
 function widget_generalstats_control() {
 
+	$generalstats_title="generalstats-title";
+	$generalstats_submit="generalstats-submit";
+	$widget_generalstats="widget_generalstats";
+
 	// Get our options and see if we're handling a form submission.
-	$options = get_option('widget_generalstats');
+	$options = get_option($widget_generalstats);
 	if ( !is_array($options) )
 		$options = array('title'=>'', 'buttontext'=>__('GeneralStats', 'widgets'));
 		if ( $_POST['generalstats-submit'] ) {
-			$options['title'] = strip_tags(stripslashes($_POST['generalstats-title']));
-			update_option('widget_generalstats', $options);
+			$options['title'] = strip_tags(stripslashes($_POST[$generalstats_title]));
+			update_option($widget_generalstats, $options);
 		}
 
 		$title = htmlspecialchars($options['title'], ENT_QUOTES);
 		
-		echo '<p style="text-align:right;"><label for="generalstats-title">' . __('Title:') . ' <input style="width: 200px;" id="generalstats-title" name="generalstats-title" type="text" value="'.$title.'" /></label></p>';
-		echo '<input type="hidden" id="generalstats-submit" name="generalstats-submit" value="1" />';
+		echo '<p style="text-align:right;"><label for="'.$generalstats_title.'">' . __('Title:') . ' <input style="width: 200px;" id="'.$generalstats_title.'" name="'.$generalstats_title.'" type="text" value="'.$title.'" /></label></p>';
+		echo '<input type="hidden" id="'.$generalstats_submit.'" name="'.$generalstats_submit.'" value="1" />';
 		echo '<p style="text-align:left;"><label for="generalstats-options">Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!</label></p>';
 	}
 
@@ -104,13 +183,14 @@ handles the cache-management
 
 function GeneralStatsComplete() {
 
-	$cacheTime = get_option('GeneralStats_Cache_Time');
-	$lastCacheTime = get_option('GeneralStats_Last_Cache_Time');
+	$fieldsPre="GeneralStats_";
+	$cacheTime = get_option($fieldsPre.'Cache_Time');
+	$lastCacheTime = get_option($fieldsPre.'Last_Cache_Time');
 
 	$cacheAge = time() - $lastCacheTime;
 
-	$cache = get_option('GeneralStats_Cache');
-	$forceCacheRefresh = get_option('GeneralStats_Force_Cache_Refresh');
+	$cache = get_option($fieldsPre.'Cache');
+	$forceCacheRefresh = get_option($fieldsPre.'Force_Cache_Refresh');
 
 	//the cache is refreshed if cache refreshing is forced, the cache is empty
 	//or the age of the cache is older then the defined caching time
@@ -119,12 +199,12 @@ function GeneralStatsComplete() {
 	     (strlen($cache) < 1) ||
 	     ($cacheAge>$cacheTime) ) {
 
-		update_option('GeneralStats_Cache', GeneralStatsCreateOutput());
-		update_option('GeneralStats_Force_Cache_Refresh','0');
-		update_option('GeneralStats_Last_Cache_Time',time());
+		update_option($fieldsPre.'Cache', GeneralStatsCreateOutput());
+		update_option($fieldsPre.'Force_Cache_Refresh','0');
+		update_option($fieldsPre.'Last_Cache_Time',time());
 	}
 
-	echo get_option('GeneralStats_Cache');
+	echo get_option($fieldsPre.'Cache');
 
 }
 
@@ -148,27 +228,31 @@ function GeneralStatsCreateOutput() {
     get general tags
     */
 
-    $before_list=stripslashes(get_option('GeneralStats_before_List'));
-    $after_list=stripslashes(get_option('GeneralStats_after_List'));
-    $before_tag=stripslashes(get_option('GeneralStats_before_Tag'));
-    $after_tag=stripslashes(get_option('GeneralStats_after_Tag'));
-    $before_detail=stripslashes(get_option('GeneralStats_before_Details'));
-    $after_detail=stripslashes(get_option('GeneralStats_after_Details'));
+    $fieldsPre="GeneralStats_";
+
+    $before_list=stripslashes(get_option($fieldsPre.'before_List'));
+    $after_list=stripslashes(get_option($fieldsPre.'after_List'));
+    $before_tag=stripslashes(get_option($fieldsPre.'before_Tag'));
+    $after_tag=stripslashes(get_option($fieldsPre.'after_Tag'));
+    $before_detail=stripslashes(get_option($fieldsPre.'before_Details'));
+    $after_detail=stripslashes(get_option($fieldsPre.'after_Details'));
+
+    $fieldsPost_Position="_Position";
+    $fieldsPost_Description="_Description";
+
+    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+	3 => "Comments", 4 => "Pages", 5 => "Links",
+	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
 
     /*
     which order do you like today?
     */
 
     $orders=array();
-    if (get_option('GeneralStats_Users_Position')!="") $orders[0] = get_option('GeneralStats_Users_Position');
-    if (get_option('GeneralStats_Categories_Position')!="") $orders[1] = get_option('GeneralStats_Categories_Position');
-    if (get_option('GeneralStats_Posts_Position')!="") $orders[2] = get_option('GeneralStats_Posts_Position');
-    if (get_option('GeneralStats_Comments_Position')!="") $orders[3] = get_option('GeneralStats_Comments_Position');
-    if (get_option('GeneralStats_Pages_Position')!="") $orders[4] = get_option('GeneralStats_Pages_Position');
-    if (get_option('GeneralStats_Links_Position')!="") $orders[5] = get_option('GeneralStats_Links_Position');
-    if (get_option('GeneralStats_Words_in_Posts_Position')!="") $orders[10] = get_option('GeneralStats_Words_in_Posts_Position');
-    if (get_option('GeneralStats_Words_in_Comments_Position')!="") $orders[11] = get_option('GeneralStats_Words_in_Comments_Position');
-    if (get_option('GeneralStats_Words_in_Pages_Position')!="") $orders[12] = get_option('GeneralStats_Words_in_Pages_Position');
+
+    foreach($fields as $key => $field) {
+	if (get_option($fieldsPre.$field.$fieldsPost_Position)!="") $orders[$key] = get_option($fieldsPre.$field.$fieldsPost_Position);
+    }
 
     /*
     sort as wished
@@ -186,44 +270,14 @@ function GeneralStatsCreateOutput() {
     loop through desired stats
     */
 
-    foreach ($orders as $key => $order) {
+    foreach($orders as $key => $order) {
+	if (array_key_exists($key, $fields)) {
+   	    $count=GeneralStatsCounter($key);
+	    $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description);
 
-        $count=GeneralStatsCounter($key);
-
-        switch($key) {
-          case 0;
-              $tag=get_option('GeneralStats_Users_Description');
-              break;
-          case 1;
-              $tag=get_option('GeneralStats_Categories_Description');
-              break;
-          case 2;
-              $tag=get_option('GeneralStats_Posts_Description');
-              break;
-          case 3;
-              $tag=get_option('GeneralStats_Comments_Description');
-              break;
-          case 4;
-              $tag=get_option('GeneralStats_Pages_Description');
-              break;
-          case 5;
-              $tag=get_option('GeneralStats_Links_Description');
-              break;
-          case 10;
-              $tag=get_option('GeneralStats_Words_in_Posts_Description');
-              break;
-          case 11;
-              $tag=get_option('GeneralStats_Words_in_Comments_Description');
-              break;
-          case 12;
-              $tag=get_option('GeneralStats_Words_in_Pages_Description');
-              break;
-        }
-
-        $count=number_format($count,'0','',get_option('GeneralStats_Thousand_Delimiter'));
-
-        $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
-
+          $count=number_format($count,'0','',get_option($fieldsPre.'Thousand_Delimiter'));
+          $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
+	}
     }
 
     /*
@@ -253,58 +307,49 @@ Param: $option
 function GeneralStatsCounter($option) {
       global $wpdb;
 
-      $statement='';
+	$fields=array(
+		0 => "ID) as counter FROM $wpdb->users",
+		1 => "cat_ID) as counter FROM $wpdb->categories",
+		2 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
+		3 => "comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'",
+		4 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'",
+		5 => "link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'",
+		10 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
+		11 => "FROM $wpdb->comments WHERE comment_approved = '1'",
+		12 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'");
+
+	$fieldsAttributes=array(
+		10 => "post_content",
+		11 => "comment_content",
+		12 => "post_content");
+
+ 	$fieldsCountAttributes=array(
+		10 => "ID",
+		11 => "comment_ID",
+		12 => "ID");
+
       $result=0;
 
-      switch ($option) {
-        case 0:
-        	$statement = "SELECT COUNT(ID) as counter FROM $wpdb->users";
-	        break;
-        case 1:
-          	$statement = "SELECT COUNT(cat_ID) as counter FROM $wpdb->categories";
-        	break;
-        case 2:
-        	$statement = "SELECT COUNT(ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'";
-	        break;
-        case 3:
-                $statement = "SELECT COUNT(comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'";
-        	break;
-        case 4:
-                $statement = "SELECT COUNT(ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'";
-        	break;
-        case 5:
-                $statement = "SELECT COUNT(link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'";
-        	break;
-        case 10:
-        	    $statement = "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'";
-		    $attribute = "post_content";
-		    $countAttribute = "ID";
-        	break;
-        case 11:
-                $statement = "FROM $wpdb->comments WHERE comment_approved = '1'";
-		    $attribute = "comment_content";
-		    $countAttribute = "comment_ID";
-        	break;
-        case 12:
-                $statement = "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'";
-		    $attribute = "post_content";
-		    $countAttribute = "ID";
-        	break;
-      }
+	if (array_key_exists($option, $fields)) {
 
+      	/*
+      	for values between 10 and 20 is a calculation needed
+      	*/
 
-      /*
-      for values between 10 and 20 is a calculation needed
-      */
+      	if ($option>=10 && $option<=20) {
+			$result=GeneralStats_WordCount($fields[$option], $fieldsAttributes[$option], $fieldsCountAttributes[$option]);
+      	}
 
-      if ($option>=10 && $option<=20) {
-		$result=GeneralStats_WordCount($statement, $attribute, $countAttribute);
-      }
+		/*
+		for all other attributes use sql select count statement
+		*/
 
-      else {
-	      $results = $wpdb->get_col($statement);
-		$result=$results[0];
-      }
+      	else {
+		      $results = $wpdb->get_col("SELECT COUNT(" .$fields[$option]);
+			$result=$results[0];
+      	}
+
+	}
 
       return $result;
 }
@@ -349,6 +394,16 @@ function GeneralStats_WordCount($statement, $attribute, $countAttribute) {
 	return $result;
 }
 
+/*
+removes values from array
+original from php.net, author: admin \x40 uostas.net
+*/
+
+function GeneralStats_array_remval($val,$arr){
+  $i=array_search($val,$arr);
+  $arr=array_merge(array_slice($arr, 0,$i), array_slice($arr, $i+1));
+  return $arr;
+}
 
 /*
 add GeneralStats to WordPress Option Page
@@ -356,7 +411,9 @@ add GeneralStats to WordPress Option Page
 
 function addGeneralStatsOptionPage() {
     if (function_exists('add_options_page')) {
-        add_options_page('GeneralStats', 'GeneralStats', 8, __FILE__, 'createGeneralStatsOptionPage');
+        $page=add_options_page('GeneralStats', 'GeneralStats', 8, __FILE__, 'createGeneralStatsOptionPage');
+        add_action('admin_print_scripts-'.$page, 'generalstats_admin_print_scripts');
+        add_action('admin_head-'.$page, 'generalstats_admin_head');
     }
 }
 
@@ -366,12 +423,30 @@ Option Page
 
 function createGeneralStatsOptionPage() {
 
-    $fields=array("GeneralStats_Users", "GeneralStats_Categories", "GeneralStats_Posts", "GeneralStats_Comments", "GeneralStats_Pages", "GeneralStats_Links", "GeneralStats_Words_in_Posts", "GeneralStats_Words_in_Comments", "GeneralStats_Words_in_Pages");
-    $csstags=array("GeneralStats_before_List", "GeneralStats_after_List", "GeneralStats_before_Tag", "GeneralStats_after_Tag", "GeneralStats_before_Details", "GeneralStats_after_Details");
+    /*
+    define constants
+    */
 
-    $fields_position_defaults=array("1", "", "2", "3", "4", "", "", "", "");
-    $fields_description_defaults=array("Users", "", "Posts", "Comments", "Pages", "", "", "", "");
+    $fieldsPre="GeneralStats_";
+
+    $fieldsPost_Position="_Position";
+    $fieldsPost_Description="_Description";
+
+    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+	3 => "Comments", 4 => "Pages", 5 => "Links",
+	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
+
+    $csstags=array("before_List", "after_List", "before_Tag", "after_Tag", "before_Details", "after_Details");
+    $available_Fields=array_keys($fields);
+
+    $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
+	5 => "", 10 => "", 11 => "", 12 => "");
+    $fields_description_defaults=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
     $csstags_defaults=array("<ul>", "</ul>", "<li><em>", "</em>&nbsp;", "", "</li>");
+
+    $Thousand_Delimiter="Thousand_Delimiter";
+    $Cache_Time="Cache_Time";
+    $Rows_at_Once="Rows_at_Once";
 
     /*
     configuration changed => store parameters
@@ -380,18 +455,18 @@ function createGeneralStatsOptionPage() {
     if (isset($_POST['info_update'])) {
 
         foreach ($fields as $field) {
-            update_option($field."_Position", $_POST[$field."_Position"]);
-            update_option($field."_Description", $_POST[$field."_Description"]);
+            update_option($fieldsPre.$field.$fieldsPost_Position, $_POST[$fieldsPre.$field.$fieldsPost_Position]);
+            update_option($fieldsPre.$field.$fieldsPost_Description, $_POST[$fieldsPre.$field.$fieldsPost_Description]);
         }
 
         foreach ($csstags as $csstag) {
-            update_option($csstag, $_POST[$csstag]);
+            update_option($fieldsPre.$csstag, $_POST[$fieldsPre.$csstag]);
         }
 
-        update_option('GeneralStats_Thousand_Delimiter', $_POST['GeneralStats_Thousand_Delimiter']);
+        update_option($fieldsPre.$Thousand_Delimiter, $_POST[$fieldsPre.$Thousand_Delimiter]);
 
-        update_option('GeneralStats_Cache_Time', $_POST['GeneralStats_Cache_Time']);
-        update_option('GeneralStats_Rows_at_Once', $_POST['GeneralStats_Rows_at_Once']);
+	  update_option($fieldsPre.$Cache_Time, $_POST[$fieldsPre.$Cache_Time]);
+        update_option($fieldsPre.$Rows_at_Once, $_POST[$fieldsPre.$Rows_at_Once]);
 
         ?><div class="updated"><p><strong>
         <?php _e('Configuration changed!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
@@ -401,46 +476,163 @@ function createGeneralStatsOptionPage() {
       elseif (isset($_POST['load_default'])) {
 
         for ($i = 0; $i < sizeof($csstags); $i++) {
-            update_option($csstags[$i], $csstags_defaults[$i]);
+            update_option($fieldsPre.$csstags[$i], $csstags_defaults[$i]);
         }
 
-        for ($i = 0; $i < sizeof($fields); $i++) {
-            update_option($fields[$i]."_Position", $fields_position_defaults[$i]);
+        foreach ($fields as $key => $field) {
+            update_option($fieldsPre.$fields[$key].$fieldsPost_Position, $fields_position_defaults[$key]);
         }
 
-        for ($i = 0; $i < sizeof($fields); $i++) {
-            update_option($fields[$i]."_Description", $fields_description_defaults[$i]);
+        foreach ($fields as $key => $field) {
+            update_option($fieldsPre.$fields[$key].$fieldsPost_Description, $fields_description_defaults[$key]);
         }
 
-	  update_option('GeneralStats_Thousand_Delimiter', ',');
+	  update_option($fieldsPre.$Thousand_Delimiter, ',');
 
-	  update_option('GeneralStats_Cache_Time', '600');
-	  update_option('GeneralStats_Rows_at_Once', '100');
+	  update_option($fieldsPre.$Cache_Time, '600');
+	  update_option($fieldsPre.$Rows_at_Once, '100');
 
         ?><div class="updated"><p><strong>
         <?php _e('Defaults loaded!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
-      <?php } ?>
+      <?php }
 
-     <?php
-     /*
-     options form
-     */
-     ?>
+    $orders=array();
 
-     <div class="wrap">
+    foreach($fields as $key => $field) {
+	if (get_option($fieldsPre.$field.$fieldsPost_Position)!="") $orders[$key] = get_option($fieldsPre.$field.$fieldsPost_Position);
+    }
+
+    asort($orders);
+
+    /*
+    begin list
+    */
+
+    $listTaken="";
+    $listAvailable="";
+    $before_tag="<li class=\"generalstats_sortablelist\" id=";
+    $after_tag="</li>";
+
+    /*
+    build lists
+    */
+
+    $beforeKey="Tags_";
+
+    foreach ($orders as $key => $order) {
+        $tag=$fields[$key];
+        /*$tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';*/
+        $available_Fields=GeneralStats_array_remval($key, $available_Fields);
+        $listTaken.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
+    }
+
+    foreach($available_Fields as $key){
+        $tag=$fields[$key];
+        /*$tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';*/
+	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
+    }
+
+    $listTakenListeners="";
+    $listAvailableListeners="";
+
+    /*
+    build Listeners
+    */
+
+    foreach ($orders as $key => $order) {
+       $listTakenListeners.="Event.observe('".$beforeKey.$key."', 'click', function(e){ generalstats_adoptDragandDropEdit('".$key."') });";
+    }
+
+    foreach ($available_Fields as $key) {
+       $listAvailableListeners.="Event.observe('".$beforeKey.$key."', 'click', function(e){ generalstats_adoptDragandDropEdit('".$key."') });";
+    }
+
+    /*
+    format list
+    */
+
+    $elementHeight=32;
+
+    $sizeListTaken=( sizeof($fields)-sizeof($available_Fields) )*$elementHeight;
+    if ($sizeListTaken<=0) $sizeListTaken=$elementHeight;
+    $sizeListAvailable=sizeof($available_Fields)*$elementHeight;
+    if ($sizeListAvailable<=0) $sizeListAvailable=$elementHeight;
+
+    $listTaken="<ul class=\"generalstats_sortablelist\" id=\"listTaken\" style=\"height:".$sizeListTaken."px;width:400px;\">".$listTaken."</ul>";
+    $listAvailable="<ul class=\"generalstats_sortablelist\" id=\"listAvailable\" style=\"height:".$sizeListAvailable."px;width:400px;\">".$listAvailable."</ul>";
+
+    /*
+    options form
+    */
+
+    ?>
+
+    <div class="wrap">
+
        <form method="post">
-         <h2>Tags</h2>
 
-     <?php
+    <div class="submit">
+      <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />
+      <input type="submit" name="load_default" value="<?php _e('Load defaults') ?>" />
+    </div>
+
+         <h2>Drag and Drop Layout</h2>
+
+     <fieldset>
+        <legend>You can customize the descriptions by clicking on the desired field in each list.</legend>
+        <legend>Don't forget to click <i>change</i> after adopting and <i>Update options</i> after you're finished.<br /><br /></legend>
+     </fieldset>
+
+     <fieldset>
+	  <legend>Taken Tags</legend>
+     </fieldset>
+
+     <?php echo($listTaken); ?>
+
+     <div id="generalstats_DragandDrop">
+
+     <fieldset>
+        <legend><label for="generalstats_DragandDrop_Edit_Text">Fieldname</label></legend>
+	  <input onfocus="document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].focus(); " style="color: #c3def1; background-color: #14568a" name="generalstats_DragandDrop_Edit_Label" id="generalstats_DragandDrop_Edit_Label" type="text" size="20" maxlength="20" readonly="readonly" />
+     </fieldset>
+
+     <fieldset>
+        <legend><label for="generalstats_DragandDrop_Edit_Text">Value</label></legend>
+        <input name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" type="text" size="20" maxlength="20" />
+     </fieldset>
+
+     <fieldset>
+	  <legend style="display:none; color:#14568a" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message"><i>Successfully Changed!</i></legend>
+        <div id="generalstats_DragandDrop_Change">Change</div>
+     </fieldset>
+
+     </div>
+
+     <br style="clear:both" />
+
+     <fieldset>
+        <legend>Available Tags</legend>
+     </fieldset>
+
+     <?php echo($listAvailable); ?>
+
+          <h2>Tags</h2>
+
+     <fieldset>
+        <legend>This is the static customizing section, forming the mirror of the <i>Drag and Drop Layout</i> section.</legend>
+        <legend>Changes to positions which you make here are only reflected in the dynamic section after pressing <i>Update options</i>.<br /><br/></legend>
+     </fieldset>
+
+    <?php
 
      foreach ($fields as $field) {
           echo("<fieldset>");
-            echo("<legend>");
+            echo("<legend><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
             _e($field);
-            echo("</legend>");
-              echo("Position <input type=\"text\" size=\"2\" name=\"".$field."_Position\" value=\"".get_option($field.'_Position')."\" />\n");
-              echo("Description <input type=\"text\" size=\"20\" name=\"".$field."_Description\" value=\"".get_option($field.'_Description')."\" />");
+            echo("</label></legend>");
+              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
+              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" />");
           echo("</fieldset>");
      }
 
@@ -452,34 +644,34 @@ function createGeneralStatsOptionPage() {
 
      foreach ($csstags as $csstag) {
           echo("<fieldset>");
-            echo("<legend>");
+            echo("<legend><label for=\"".$fieldsPre.$csstag."\">");
             _e($csstag);
-            echo("</legend>");
-              echo("<input type=\"text\" size=\"30\" name=\"".$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($csstag)))."\" />");
+            echo("</label></legend>");
+              echo("<input type=\"text\" size=\"30\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" />");
           echo("</fieldset>");
      }
 
      ?>
 
      <fieldset>
-        <legend><?php _e('GeneralStats_Thousand Delimiter') ?></legend>
-            <input type="text" size="2" name="GeneralStats_Thousand_Delimiter" value="<?php echo get_option('GeneralStats_Thousand_Delimiter'); ?>" />
+        <legend><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></legend>
+            <input type="text" size="2" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" />
       </fieldset>
 
         <h2>Administrative Options</h2>
 
      <fieldset>
-        <legend><?php _e('GeneralStats_Cache Time (in seconds)') ?></legend>
-            <input type="text" size="2" name="GeneralStats_Cache_Time" value="<?php echo get_option('GeneralStats_Cache_Time'); ?>" />
+        <legend><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></legend>
+            <input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" />
       </fieldset>
 
      <fieldset>
-        <legend><?php _e('GeneralStats_Rows at Once (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></legend>
-            <input type="text" size="2" name="GeneralStats_Rows_at_Once" value="<?php echo get_option('GeneralStats_Rows_at_Once'); ?>" />
+        <legend><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></legend>
+            <input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" />
       </fieldset>
 
     <h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
-    <?php GeneralStatsComplete(); ?>
+    <?php GeneralStatsComplete(); ?><br /><br />
 
     <div class="submit">
       <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />
@@ -489,8 +681,211 @@ function createGeneralStatsOptionPage() {
     </form>
     </div>
 
-<?php
-}
+    <script type="text/javascript">
+
+    var fieldPre = "GeneralStats_";
+    var fieldPost = "_Position";
+    var keys = [0, 1, 2, 3, 4, 5, 10, 11, 12];
+    var fields = ["Users", "Categories", "Posts", "Comments", "Pages", "Links", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
+
+	/*
+	original source from Nannette Thacker
+	taken from http://www.shiningstar.net/
+	*/
+	
+	function generalstats_checkNumeric(objName,minval,maxval,comma,period,hyphen,message) {
+		var numberfield = objName;
+
+		if (generalstats_chkNumeric(objName,minval,maxval,comma,period,hyphen,message) == false) {
+			return false;
+		}
+
+		else {
+			return true;
+		}
+	}
+
+	// only allow 0-9 be entered, plus any values passed
+	// (can be in any order, and don't have to be comma, period, or hyphen)
+	// if all numbers allow commas, periods, hyphens or whatever,
+	// just hard code it here and take out the passed parameters
+
+	function generalstats_chkNumeric(objName,minval,maxval,comma,period,hyphen,message) {
+
+		var checkOK = "0123456789" + comma + period + hyphen;
+		var checkStr = objName;
+		var allValid = true;
+		var decPoints = 0;
+		var allNum = "";
+
+		for (i = 0;  i < checkStr.value.length;  i++) {
+			ch = checkStr.value.charAt(i);
+
+			for (j = 0;  j < checkOK.length;  j++)
+			if (ch == checkOK.charAt(j))
+			break;
+
+			if (j == checkOK.length) {
+				allValid = false;
+				break;
+			}
+
+			if (ch != ",")
+				allNum += ch;
+		}
+
+		if (!allValid) {	
+			if (message==true) {
+				alertsay = "Please enter only these values \""
+				alertsay = alertsay + checkOK + "\" in the \"" + checkStr.name + "\" field."
+				alert(alertsay);
+			}
+
+			return (false);
+		}
+
+		// set the minimum and maximum
+		var chkVal = allNum;
+		var prsVal = parseInt(allNum);
+
+		if (minval != "" && maxval != "") if (!(prsVal >= minval && prsVal <= maxval)) {
+			if (message==true) {
+				alertsay = "Please enter a value greater than or "
+				alertsay = alertsay + "equal to \"" + minval + "\" and less than or "
+				alertsay = alertsay + "equal to \"" + maxval + "\" in the \"" + checkStr.name + "\" field."
+				alert(alertsay);
+			}
+			return (false);
+		}
+	}
+
+    /*
+    create drag and drop lists
+    */
+
+    Sortable.create("listTaken", {
+	dropOnEmpty:true,
+	containment:["listTaken","listAvailable"],
+	constraint:false,
+	onUpdate:function(){ generalstats_updateDragandDropLists(); }
+	});
+
+   Sortable.create("listAvailable", {
+	dropOnEmpty:true,
+	containment:["listTaken","listAvailable"],
+	constraint:false
+	});
+
+      /*
+      drag and drop lists update function
+      updates fields and activates edit panel
+      */
+
+	function generalstats_updateDragandDropLists() {
+
+	/*
+	get current fields order
+	*/
+
+	var sequence=Sortable.sequence('listTaken');
+	if (sequence.length>0) {
+		var list = escape(Sortable.sequence('listTaken'));
+		var sorted_ids = unescape(list).split(',');
+	}
+
+	else {
+		var sorted_ids = [-1];
+	}
+
+	/*
+	clear all previously set values
+	*/
+
+	for (var i = 0; i < fields.length; i++) {
+		document.getElementsByName(fieldPre+fields[i]+fieldPost)[0].value = "";
+	}
+
+	/*
+	set new values
+	*/
+
+	for (var i = 0; i < sorted_ids.length; i++) {
+
+		/*
+		looks up keys array for matching index
+		*/
+
+		for (var j = 0; j < keys.length; j++) {
+			if (keys[j]==sorted_ids[i]) {
+				document.getElementsByName(fieldPre+fields[j]+fieldPost)[0].value = i+1;
+			}
+		}
+	}
+
+	/*
+	dynamically set new list heights
+	*/
+
+      var elementHeight=32;
+
+	var listTakenLength=sorted_ids.length*elementHeight;
+	if (listTakenLength<=0) listTakenLength=elementHeight;
+	document.getElementById('listTaken').style.height = (listTakenLength)+'px';
+
+	list = escape(Sortable.sequence('listAvailable'));
+	sorted_ids = unescape(list).split(',');
+
+	listTakenLength=sorted_ids.length*elementHeight;
+	if (listTakenLength<=0) listTakenLength=elementHeight;
+	document.getElementById('listAvailable').style.height = (listTakenLength)+'px';
+
+	}
+
+	/*
+	load selected field in edit panel
+	*/
+
+	function generalstats_adoptDragandDropEdit (key) {
+		document.getElementsByName('generalstats_DragandDrop_Edit_Message')[0].style.display='none';
+
+		for (var j = 0; j < keys.length; j++) {
+			if (keys[j]==key) {
+				document.getElementsByName('generalstats_DragandDrop_Edit_Label')[0].value = fields[j];
+				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value = document.getElementsByName(fieldPre+fields[j]+'_Description')[0].value; 
+				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].focus();
+			}
+		}
+	}
+
+	/*
+	change desired value for selected field in edit panel
+	*/
+
+	function generalstats_changeDragandDropEdit () {
+		var fieldName= document.getElementsByName('generalstats_DragandDrop_Edit_Label')[0].value;
+
+		if (fieldName.length>0) {
+			document.getElementsByName( fieldPre + fieldName +'_Description')[0].value = document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value;
+			new Effect.Highlight(document.getElementById('generalstats_DragandDrop') );
+			new Effect.Appear(document.getElementsByName('generalstats_DragandDrop_Edit_Message')[0]);
+		}
+
+		else
+		{
+			alert('Please click on the desired list field to adopt setting!');
+		}
+	}
+
+	new Draggable('generalstats_DragandDrop');
+
+      Event.observe('generalstats_DragandDrop_Change', 'click', function(e){ generalstats_changeDragandDropEdit(); });
+
+      <?php echo($listTakenListeners); ?>
+      <?php echo($listAvailableListeners); ?>
+
+   </script>
+
+<?php }
 
 add_action('init', 'generalstats_init');
 add_action('widgets_init', 'widget_generalstats_init');

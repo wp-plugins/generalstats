@@ -12,7 +12,9 @@ Counts the number of users, categories, posts, comments, pages, links, words in 
 
 Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
 
-**fully-optionpage-configurable, easy to integrate (now ships with widget functionality), high performing with caching technology and customizable memory usage**
+**fully-optionpage-configurable, easy to integrate (ships with widget functionality), high performing with caching technology and customizable memory usage**
+
+**Now with Drag and Drop admin menu page**
 
 Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org/generalstats/branches/wordpress%20minor%202.1/)
 
@@ -23,7 +25,7 @@ Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org
 2. In the WordPress admin console, go to the Plugins tab, and activate the GeneralStats plugin.
 
 3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it.
-Feel free to play around and see the result in the section preview at the bottom of the options page. If you are new to GeneralStats, it's a good start to load the defaults by clicking the button in the right lower corner.
+Feel free to play around and see the result in the section preview at the bottom of the options page. If you are new to GeneralStats, it's a good start to load the defaults by clicking the button in the right top or lower corner.
 
 4. If you got [widget functionality](http://wordpress.org/extend/plugins/widgets/), just drag and drop GeneralStats on your dynamic sidebar in the presentation menu and name it appropriate. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
 
@@ -45,8 +47,14 @@ For performance optimization, you can play around with the "Rows at once" parame
 
 Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should be appropriate.
 
+= Why is the 'Drag and Drop Layout' not working? =
+
+This section is based on internal wordpress javascript-libraries, which means that it is only working with Wordpress versions >= 2.1 and you have to have javascript enabled in your browser! The plugin is still fully functionable without these constraints, but you need to add customize your stats 'per hand', as in older versions of GeneralStats.
+
 == Screenshots ==
 
-1. The first screenshot shows the Options/GeneralStats Tab with the available tags in the admin menu.
+1. The first screenshot shows the Options/GeneralStats Tab with the Drag and Drop Layout section in the admin menu.
 
-2. On the second screenshot the available csstags as well as the preview section can be seen.
+1. The second screenshot shows the Options/GeneralStats Tab with the available tags in the admin's menu static section.
+
+2. On the third screenshot the available csstags as well as the preview section can be seen.

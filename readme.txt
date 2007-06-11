@@ -29,7 +29,7 @@ Feel free to play around and see the result in the section preview at the bottom
 
 4. If you got [widget functionality](http://wordpress.org/extend/plugins/widgets/), just drag and drop GeneralStats on your dynamic sidebar in the presentation menu and name it appropriate. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
 
-5. Drink a beer, smoke a cigarette or celebrate in a way you like!
+5. Drink a beer, smoke a cigarette or celebrate in a way you like! (and maybe you want to add a link to [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/))
 
 **I had to adopt the variable names in the options tab, so in case of an update please be sure to also have a look on the [FAQ](http://wordpress.org/extend/plugins/generalstats/faq/).**
 

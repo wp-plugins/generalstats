@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.50
+Version: 0.51
 Author URI: http://www.neotrinity.at
 */
 
@@ -131,7 +131,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.50\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.51\"/>");
 }
 
 /*
@@ -521,15 +521,13 @@ function createGeneralStatsOptionPage() {
     $beforeKey="Tags_";
 
     foreach ($orders as $key => $order) {
-        $tag=$fields[$key];
-        /*$tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';*/
+        $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';
         $available_Fields=GeneralStats_array_remval($key, $available_Fields);
         $listTaken.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
     }
 
     foreach($available_Fields as $key){
-        $tag=$fields[$key];
-        /*$tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';*/
+        $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';
 	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
     }
 
@@ -577,11 +575,14 @@ function createGeneralStatsOptionPage() {
       <input type="submit" name="load_default" value="<?php _e('Load defaults') ?>" />
     </div>
 
-         <h2>Drag and Drop Layout</h2>
+         <a name="<?php echo($fieldsPre); ?>Drag_and_Drop"></a><h2>Drag and Drop Layout</h2>
 
      <fieldset>
-        <legend>You can customize the descriptions by clicking on the desired field in each list.</legend>
-        <legend>Don't forget to click <i>change</i> after adopting and <i>Update options</i> after you're finished.<br /><br /></legend>
+        <legend>It maybe a good start for GeneralStats first-timers to click on <em>Load defaults</em>.</legend>
+        <legend>You can customize the descriptions by clicking on the desired field in each list, whereas the fieldname is in the brackets.</legend>
+        <legend>Don't forget to click <em>Change</em> after adopting and <em>Update options</em> after you're finished.</legend>
+        <legend>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be loaded via the <em>Load defaults</em> button)</legend>
+        <legend>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).<br /><br /></legend>
      </fieldset>
 
      <fieldset>
@@ -603,7 +604,7 @@ function createGeneralStatsOptionPage() {
      </fieldset>
 
      <fieldset>
-	  <legend style="display:none; color:#14568a" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message"><i>Successfully Changed!</i></legend>
+	  <legend style="display:none; color:#14568a" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message"><em>Successfully Changed!</em></legend>
         <div id="generalstats_DragandDrop_Change">Change</div>
      </fieldset>
 
@@ -614,14 +615,15 @@ function createGeneralStatsOptionPage() {
      <fieldset>
         <legend>Available Tags</legend>
      </fieldset>
-
      <?php echo($listAvailable); ?>
 
           <h2>Tags</h2>
 
      <fieldset>
-        <legend>This is the static customizing section, forming the mirror of the <i>Drag and Drop Layout</i> section.</legend>
-        <legend>Changes to positions which you make here are only reflected in the dynamic section after pressing <i>Update options</i>.<br /><br/></legend>
+        <legend>This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.</legend>
+        <legend>Changes to positions which you make here are only reflected in the dynamic section after pressing <em>Update options</em>.</legend>
+        <legend>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be loaded via the <em>Load defaults</em> button)</legend>
+        <legend>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).<br /><br /></legend>
      </fieldset>
 
     <?php
@@ -638,7 +640,7 @@ function createGeneralStatsOptionPage() {
 
      ?>
 
-        <h2>CSS-Tags</h2>
+        <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2>CSS-Tags</h2>
 
      <?php
 
@@ -670,7 +672,7 @@ function createGeneralStatsOptionPage() {
             <input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" />
       </fieldset>
 
-    <h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
+    <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
     <?php GeneralStatsComplete(); ?><br /><br />
 
     <div class="submit">
@@ -866,8 +868,16 @@ function createGeneralStatsOptionPage() {
 
 		if (fieldName.length>0) {
 			document.getElementsByName( fieldPre + fieldName +'_Description')[0].value = document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value;
-			new Effect.Highlight(document.getElementById('generalstats_DragandDrop') );
+			new Effect.Highlight(document.getElementById('generalstats_DragandDrop'),{startcolor:'#30df8b'});
 			new Effect.Appear(document.getElementsByName('generalstats_DragandDrop_Edit_Message')[0]);
+
+			//adopt drag and drop table
+			for (var j = 0; j < fields.length; j++) {
+				if (fields[j]==fieldName) {
+					document.getElementById('Tags_'+keys[j]).firstChild.nodeValue= document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value+' ('+fieldName+')';
+				}
+			}
+
 		}
 
 		else

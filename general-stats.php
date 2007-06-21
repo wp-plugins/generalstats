@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.51
+Version: 0.52
 Author URI: http://www.neotrinity.at
 */
 
@@ -90,6 +90,7 @@ function generalstats_admin_head() {
       }
 
       #generalstats_DragandDrop_Change{
+		cursor : default;
 		margin-top: 10px;
 		background: url( images/fade-butt.png );
 		border: 3px double #999;
@@ -97,7 +98,7 @@ function generalstats_admin_head() {
 		border-top-color: #ccc;
 		color: #333;
 		padding: 0.25em;
-		width: 150px;
+		width: 162px;
 		text-align: center;
       }
 
@@ -106,6 +107,17 @@ function generalstats_admin_head() {
 		border: 3px double #ccc;
 		border-left-color: #999;
 		border-top-color: #999;
+	}
+
+	img.generalstats_arrowbutton {
+		vertical-align: bottom;
+		cursor: pointer;
+		margin-left: 5px;
+	}
+
+	img.generalstats_arrowbutton:hover {
+		border-bottom: 1px dotted #ffffff;
+		border-top: 1px dotted #ffffff;
 	}
 
       </style>
@@ -131,7 +143,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.51\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.52\"/>");
 }
 
 /*
@@ -520,15 +532,21 @@ function createGeneralStatsOptionPage() {
 
     $beforeKey="Tags_";
 
+    $plugin_url = get_settings('siteurl') . '/wp-content/plugins/generalstats/';
+
     foreach ($orders as $key => $order) {
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';
+	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:20px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
         $available_Fields=GeneralStats_array_remval($key, $available_Fields);
-        $listTaken.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
+        $listTaken.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
 
     foreach($available_Fields as $key){
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';
-	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">". $tag.$after_tag."\n";
+	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:20px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
+	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
 
     $listTakenListeners="";
@@ -568,11 +586,9 @@ function createGeneralStatsOptionPage() {
 
     <div class="wrap">
 
-       <form method="post">
-
     <div class="submit">
-      <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />
-      <input type="submit" name="load_default" value="<?php _e('Load defaults') ?>" />
+      <input type="button" id="info_update_click" name="info_update_click" value="<?php _e('Update options') ?>" />
+      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" />
     </div>
 
          <a name="<?php echo($fieldsPre); ?>Drag_and_Drop"></a><h2>Drag and Drop Layout</h2>
@@ -595,17 +611,17 @@ function createGeneralStatsOptionPage() {
 
      <fieldset>
         <legend><label for="generalstats_DragandDrop_Edit_Text">Fieldname</label></legend>
-	  <input onfocus="document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].focus(); " style="color: #c3def1; background-color: #14568a" name="generalstats_DragandDrop_Edit_Label" id="generalstats_DragandDrop_Edit_Label" type="text" size="20" maxlength="20" readonly="readonly" />
+	  <input disabled="disabled" style="color: #c3def1; background-color: #14568a" name="generalstats_DragandDrop_Edit_Label" id="generalstats_DragandDrop_Edit_Label" type="text" size="20" maxlength="20" />
      </fieldset>
 
      <fieldset>
         <legend><label for="generalstats_DragandDrop_Edit_Text">Value</label></legend>
-        <input name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" type="text" size="20" maxlength="20" />
+        <input onkeyup="if(event.keyCode==13) generalstats_changeDragandDropEdit();" name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" disabled="disabled" type="text" size="20" maxlength="20" />
      </fieldset>
 
      <fieldset>
 	  <legend style="display:none; color:#14568a" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message"><em>Successfully Changed!</em></legend>
-        <div id="generalstats_DragandDrop_Change">Change</div>
+        <input type="button" id="generalstats_DragandDrop_Change" value="Change" />
      </fieldset>
 
      </div>
@@ -617,11 +633,13 @@ function createGeneralStatsOptionPage() {
      </fieldset>
      <?php echo($listAvailable); ?>
 
+       <form method="post">
+
           <h2>Tags</h2>
 
      <fieldset>
         <legend>This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.</legend>
-        <legend>Changes to positions which you make here are only reflected in the dynamic section after pressing <em>Update options</em>.</legend>
+        <legend>Changes to positions which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">dynamic section</a> after pressing <em>Update options</em>.</legend>
         <legend>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be loaded via the <em>Load defaults</em> button)</legend>
         <legend>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).<br /><br /></legend>
      </fieldset>
@@ -790,6 +808,7 @@ function createGeneralStatsOptionPage() {
 	*/
 
 	var sequence=Sortable.sequence('listTaken');
+
 	if (sequence.length>0) {
 		var list = escape(Sortable.sequence('listTaken'));
 		var sorted_ids = unescape(list).split(',');
@@ -844,6 +863,88 @@ function createGeneralStatsOptionPage() {
 	}
 
 	/*
+	moves an element in a drag and drop one position up
+	*/
+
+	function generalstats_moveElementUpforList(list, key) {
+		var sequence=Sortable.sequence(list);
+		var newsequence=[];
+		var reordered=false;
+
+		//move only, if there is more than one element in the list
+		if (sequence.length>1) for (var j = 0; j < sequence.length; j++) {
+
+			//move, if not already first element, the element is not null
+			if (j>0 && sequence[j].length>0 && sequence[j]==key) {
+				var temp=newsequence[j-1];
+				newsequence[j-1]=key;
+				newsequence[j]=temp;
+				reordered=true;
+			}
+			
+			//if element not found, just copy array
+			else {
+				newsequence[j]=sequence[j];
+			}
+		}
+
+		if (reordered) Sortable.setSequence (list,newsequence);
+		return reordered;
+	}
+
+	/*
+	handles moving up for both lists
+	*/
+
+	function generalstats_moveElementUp(key) {
+		if (generalstats_moveElementUpforList('listTaken', key)==false)
+			generalstats_moveElementUpforList('listAvailable', key);
+
+		generalstats_updateDragandDropLists();
+	}
+
+	/*
+	moves an element in a drag and drop one position down
+	*/
+
+	function generalstats_moveElementDownforList(list, key) {
+		var sequence=Sortable.sequence(list);
+		var newsequence=[];
+		var reordered=false;
+
+		//move, if not already last element, the element is not null
+		if (sequence.length>1) for (var j = 0; j < sequence.length; j++) {
+
+			//move, if not already first element, the element is not null
+			if (j<(sequence.length-1) && sequence[j].length>0 && sequence[j]==key) {
+				newsequence[j+1]=key;
+				newsequence[j]=sequence[j+1];
+				reordered=true;
+				j++;
+			}
+			
+			//if element not found, just copy array
+			else {
+				newsequence[j]=sequence[j];
+			}
+		}
+
+		if (reordered) Sortable.setSequence (list,newsequence);
+		return reordered;
+	}
+
+	/*
+	handles moving down for both lists
+	*/
+
+	function generalstats_moveElementDown(key) {
+		if (generalstats_moveElementDownforList('listTaken', key)==false)
+			generalstats_moveElementDownforList('listAvailable', key);
+
+		generalstats_updateDragandDropLists();
+	}
+
+	/*
 	load selected field in edit panel
 	*/
 
@@ -854,6 +955,7 @@ function createGeneralStatsOptionPage() {
 			if (keys[j]==key) {
 				document.getElementsByName('generalstats_DragandDrop_Edit_Label')[0].value = fields[j];
 				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value = document.getElementsByName(fieldPre+fields[j]+'_Description')[0].value; 
+				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].disabled=null;
 				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].focus();
 			}
 		}
@@ -874,7 +976,8 @@ function createGeneralStatsOptionPage() {
 			//adopt drag and drop table
 			for (var j = 0; j < fields.length; j++) {
 				if (fields[j]==fieldName) {
-					document.getElementById('Tags_'+keys[j]).firstChild.nodeValue= document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value+' ('+fieldName+')';
+					document.getElementById('Tags_'+keys[j]).childNodes[2].nodeValue= document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value+' ('+fieldName+')';
+					new Effect.Highlight(document.getElementById('Tags_'+keys[j]),{startcolor:'#30df8b'});
 				}
 			}
 
@@ -889,6 +992,9 @@ function createGeneralStatsOptionPage() {
 	new Draggable('generalstats_DragandDrop');
 
       Event.observe('generalstats_DragandDrop_Change', 'click', function(e){ generalstats_changeDragandDropEdit(); });
+
+      Event.observe('info_update_click', 'click', function(e){ document.getElementsByName('info_update')[0].click(); });
+      Event.observe('load_default_click', 'click', function(e){ document.getElementsByName('load_default')[0].click(); });
 
       <?php echo($listTakenListeners); ?>
       <?php echo($listAvailableListeners); ?>

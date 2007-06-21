@@ -3,7 +3,7 @@ Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=neo%40neotrinity%2eat&item_name=neotrinity%2eat&no_shipping=1&no_note=1&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
 Tags: statistics, stats, counting, count, widget, sidebar
 Requires at least: 2.1
-Tested up to: 2.2
+Tested up to: 2.2.1
 Stable tag: trunk
 
 Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
@@ -24,7 +24,7 @@ Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org
 
 2. In the WordPress admin console, go to the Plugins tab, and activate the GeneralStats plugin.
 
-3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it.
+3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it or you can use the AJAX functionality in the Drag and Drop section.
 Feel free to play around and see the result in the section preview at the bottom of the options page. If you are new to GeneralStats, it's a good start to load the defaults by clicking the button in the right top or lower corner.
 
 4. If you got [widget functionality](http://wordpress.org/extend/plugins/widgets/), just drag and drop GeneralStats on your dynamic sidebar in the presentation menu and name it appropriate. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.

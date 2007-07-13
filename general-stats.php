@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.52
+Version: 0.53
 Author URI: http://www.neotrinity.at
 */
 
@@ -143,7 +143,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.52\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.53\"/>");
 }
 
 /*
@@ -703,6 +703,8 @@ function createGeneralStatsOptionPage() {
 
     <script type="text/javascript">
 
+    /* <![CDATA[ */
+
     var fieldPre = "GeneralStats_";
     var fieldPost = "_Position";
     var keys = [0, 1, 2, 3, 4, 5, 10, 11, 12];
@@ -810,7 +812,7 @@ function createGeneralStatsOptionPage() {
 	var sequence=Sortable.sequence('listTaken');
 
 	if (sequence.length>0) {
-		var list = escape(Sortable.sequence('listTaken'));
+		var list = escape(sequence);
 		var sorted_ids = unescape(list).split(',');
 	}
 
@@ -863,7 +865,7 @@ function createGeneralStatsOptionPage() {
 	}
 
 	/*
-	moves an element in a drag and drop one position up
+	moves an element in a drag and drop list one position up
 	*/
 
 	function generalstats_moveElementUpforList(list, key) {
@@ -872,7 +874,7 @@ function createGeneralStatsOptionPage() {
 		var reordered=false;
 
 		//move only, if there is more than one element in the list
-		if (sequence.length>1) for (var j = 0; j < sequence.length; j++) {
+		if (sequence.length>1) for (var j=0; j<sequence.length; j++) {
 
 			//move, if not already first element, the element is not null
 			if (j>0 && sequence[j].length>0 && sequence[j]==key) {
@@ -888,7 +890,7 @@ function createGeneralStatsOptionPage() {
 			}
 		}
 
-		if (reordered) Sortable.setSequence (list,newsequence);
+		if (reordered) Sortable.setSequence(list,newsequence);
 		return reordered;
 	}
 
@@ -904,7 +906,7 @@ function createGeneralStatsOptionPage() {
 	}
 
 	/*
-	moves an element in a drag and drop one position down
+	moves an element in a drag and drop list one position down
 	*/
 
 	function generalstats_moveElementDownforList(list, key) {
@@ -913,9 +915,9 @@ function createGeneralStatsOptionPage() {
 		var reordered=false;
 
 		//move, if not already last element, the element is not null
-		if (sequence.length>1) for (var j = 0; j < sequence.length; j++) {
+		if (sequence.length>1) for (var j=0; j<sequence.length; j++) {
 
-			//move, if not already first element, the element is not null
+			//move, if not already last element, the element is not null
 			if (j<(sequence.length-1) && sequence[j].length>0 && sequence[j]==key) {
 				newsequence[j+1]=key;
 				newsequence[j]=sequence[j+1];
@@ -929,7 +931,7 @@ function createGeneralStatsOptionPage() {
 			}
 		}
 
-		if (reordered) Sortable.setSequence (list,newsequence);
+		if (reordered) Sortable.setSequence(list,newsequence);
 		return reordered;
 	}
 
@@ -998,6 +1000,8 @@ function createGeneralStatsOptionPage() {
 
       <?php echo($listTakenListeners); ?>
       <?php echo($listAvailableListeners); ?>
+
+   /* ]]> */
 
    </script>
 

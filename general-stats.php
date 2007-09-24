@@ -3,7 +3,7 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Counts the number of users, terms, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
 Version: 0.54
 Author URI: http://www.neotrinity.at
@@ -252,8 +252,8 @@ function GeneralStatsCreateOutput() {
     $fieldsPost_Position="_Position";
     $fieldsPost_Description="_Description";
 
-    $fields=array(0 => "Users", 1 => "Terms", 2 => "Posts",
-	3 => "Comments", 4 => "Pages", 5 => "Links",
+    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+	3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories",
 	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
 
     /*
@@ -306,11 +306,13 @@ function GeneralStatsCreateOutput() {
 GeneralStatsCounter
 Param: $option
 		0..users
-		1..terms
+		1..categories
 		2..posts
 		3..comments
 		4..pages
 		5..links
+		6..tags
+		7..link-categories
 		10..words in posts
 		11..words in comments
 		12..words in pages
@@ -321,11 +323,13 @@ function GeneralStatsCounter($option) {
 
 	$fields=array(
 		0 => "ID) as counter FROM $wpdb->users",
-		1 => "term_id) as counter FROM $wpdb->terms",
+		1 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='category'",
 		2 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
 		3 => "comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'",
 		4 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'",
 		5 => "link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'",
+		6 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='post_tag'",
+		7 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='link_category'",
 		10 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
 		11 => "FROM $wpdb->comments WHERE comment_approved = '1'",
 		12 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'");
@@ -444,8 +448,8 @@ function createGeneralStatsOptionPage() {
     $fieldsPost_Position="_Position";
     $fieldsPost_Description="_Description";
 
-    $fields=array(0 => "Users", 1 => "Terms", 2 => "Posts",
-	3 => "Comments", 4 => "Pages", 5 => "Links",
+    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+	3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories",
 	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
 
     $csstags=array("before_List", "after_List", "before_Tag", "after_Tag", "before_Details", "after_Details");
@@ -453,7 +457,7 @@ function createGeneralStatsOptionPage() {
 
     $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
 	5 => "", 10 => "", 11 => "", 12 => "");
-    $fields_description_defaults=array(0 => "Users", 1 => "Terms", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
+    $fields_description_defaults=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
     $csstags_defaults=array("<ul>", "</ul>", "<li><em>", "</em>&nbsp;", "", "</li>");
 
     $Thousand_Delimiter="Thousand_Delimiter";
@@ -707,8 +711,8 @@ function createGeneralStatsOptionPage() {
 
     var fieldPre = "GeneralStats_";
     var fieldPost = "_Position";
-    var keys = [0, 1, 2, 3, 4, 5, 10, 11, 12];
-    var fields = ["Users", "Terms", "Posts", "Comments", "Pages", "Links", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
+    var keys = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+    var fields = ["Users", "Categories", "Posts", "Comments", "Pages", "Links", "Tags", "Link-Categories", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
 
 	/*
 	original source from Nannette Thacker

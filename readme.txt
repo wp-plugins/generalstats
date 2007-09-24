@@ -3,18 +3,20 @@ Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=neo%40neotrinity%2eat&item_name=neotrinity%2eat&no_shipping=1&no_note=1&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
 Tags: statistics, stats, counting, count, widget, sidebar
 Requires at least: 2.1
-Tested up to: 2.2.2
+Tested up to: 2.3
 Stable tag: trunk
 
-Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
+Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
 == Description ==
 
-Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages.
+Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
 **fully-optionpage-configurable, easy to integrate (ships with widget functionality), high performing with caching technology and customizable memory usage**
 
 **Now with Drag and Drop admin menu page**
+
+Please find the version for wordpress 2.1 and 2.2 [here](http://svn.wp-plugins.org/generalstats/branches/wordpress%202.1%20-%202.2/)
 
 Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org/generalstats/branches/wordpress%20minor%202.1/)
 

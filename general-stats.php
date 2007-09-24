@@ -3,9 +3,9 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Counts the number of users, categories, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Counts the number of users, terms, posts, comments, pages, links, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.53
+Version: 0.54
 Author URI: http://www.neotrinity.at
 */
 
@@ -143,7 +143,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.53\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.54\"/>");
 }
 
 /*
@@ -252,7 +252,7 @@ function GeneralStatsCreateOutput() {
     $fieldsPost_Position="_Position";
     $fieldsPost_Description="_Description";
 
-    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+    $fields=array(0 => "Users", 1 => "Terms", 2 => "Posts",
 	3 => "Comments", 4 => "Pages", 5 => "Links",
 	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
 
@@ -306,7 +306,7 @@ function GeneralStatsCreateOutput() {
 GeneralStatsCounter
 Param: $option
 		0..users
-		1..categories
+		1..terms
 		2..posts
 		3..comments
 		4..pages
@@ -321,7 +321,7 @@ function GeneralStatsCounter($option) {
 
 	$fields=array(
 		0 => "ID) as counter FROM $wpdb->users",
-		1 => "cat_ID) as counter FROM $wpdb->categories",
+		1 => "term_id) as counter FROM $wpdb->terms",
 		2 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
 		3 => "comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'",
 		4 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'",
@@ -444,7 +444,7 @@ function createGeneralStatsOptionPage() {
     $fieldsPost_Position="_Position";
     $fieldsPost_Description="_Description";
 
-    $fields=array(0 => "Users", 1 => "Categories", 2 => "Posts",
+    $fields=array(0 => "Users", 1 => "Terms", 2 => "Posts",
 	3 => "Comments", 4 => "Pages", 5 => "Links",
 	10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
 
@@ -453,7 +453,7 @@ function createGeneralStatsOptionPage() {
 
     $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
 	5 => "", 10 => "", 11 => "", 12 => "");
-    $fields_description_defaults=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
+    $fields_description_defaults=array(0 => "Users", 1 => "Terms", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
     $csstags_defaults=array("<ul>", "</ul>", "<li><em>", "</em>&nbsp;", "", "</li>");
 
     $Thousand_Delimiter="Thousand_Delimiter";
@@ -708,7 +708,7 @@ function createGeneralStatsOptionPage() {
     var fieldPre = "GeneralStats_";
     var fieldPost = "_Position";
     var keys = [0, 1, 2, 3, 4, 5, 10, 11, 12];
-    var fields = ["Users", "Categories", "Posts", "Comments", "Pages", "Links", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
+    var fields = ["Users", "Terms", "Posts", "Comments", "Pages", "Links", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
 
 	/*
 	original source from Nannette Thacker
@@ -866,32 +866,50 @@ function createGeneralStatsOptionPage() {
 
 	/*
 	moves an element in a drag and drop list one position up
+	modified by Nikk Folts, http://www.nikkfolts.com/
 	*/
 
-	function generalstats_moveElementUpforList(list, key) {
+	function generalstats_moveElementUpforList(list, row) {
+		return generalstats_moveRow(list, row, 1);
+	}
+
+	/*
+	moves an element in a drag and drop list one position down
+	modified by Nikk Folts, http://www.nikkfolts.com/
+	*/
+
+	function generalstats_moveElementDownforList(list, row) {
+		return generalstats_moveRow(list, row, -1);
+	}
+
+	/*
+	moves an element in a drag and drop list one position
+	modified by Nikk Folts, http://www.nikkfolts.com/
+	*/
+
+	function generalstats_moveRow(list, row, dir) {
 		var sequence=Sortable.sequence(list);
-		var newsequence=[];
-		var reordered=false;
+		var found=false;
 
 		//move only, if there is more than one element in the list
 		if (sequence.length>1) for (var j=0; j<sequence.length; j++) {
 
-			//move, if not already first element, the element is not null
-			if (j>0 && sequence[j].length>0 && sequence[j]==key) {
-				var temp=newsequence[j-1];
-				newsequence[j-1]=key;
-				newsequence[j]=temp;
-				reordered=true;
-			}
-			
-			//if element not found, just copy array
-			else {
-				newsequence[j]=sequence[j];
+			//element found
+			if (sequence[j]==row) {
+				found=true;
+
+				var i = j - dir;
+				if (i >= 0 && i <= sequence.length) {
+					var temp=sequence[i];
+					sequence[i]=row;
+					sequence[j]=temp;
+					break;
+				}
 			}
 		}
 
-		if (reordered) Sortable.setSequence(list,newsequence);
-		return reordered;
+		Sortable.setSequence(list, sequence);
+		return found;
 	}
 
 	/*
@@ -903,36 +921,6 @@ function createGeneralStatsOptionPage() {
 			generalstats_moveElementUpforList('listAvailable', key);
 
 		generalstats_updateDragandDropLists();
-	}
-
-	/*
-	moves an element in a drag and drop list one position down
-	*/
-
-	function generalstats_moveElementDownforList(list, key) {
-		var sequence=Sortable.sequence(list);
-		var newsequence=[];
-		var reordered=false;
-
-		//move, if not already last element, the element is not null
-		if (sequence.length>1) for (var j=0; j<sequence.length; j++) {
-
-			//move, if not already last element, the element is not null
-			if (j<(sequence.length-1) && sequence[j].length>0 && sequence[j]==key) {
-				newsequence[j+1]=key;
-				newsequence[j]=sequence[j+1];
-				reordered=true;
-				j++;
-			}
-			
-			//if element not found, just copy array
-			else {
-				newsequence[j]=sequence[j];
-			}
-		}
-
-		if (reordered) Sortable.setSequence(list,newsequence);
-		return reordered;
 	}
 
 	/*

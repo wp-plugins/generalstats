@@ -323,13 +323,13 @@ function GeneralStatsCounter($option) {
 
 	$fields=array(
 		0 => "ID) as counter FROM $wpdb->users",
-		1 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='category'",
+		1 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='category'",
 		2 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
 		3 => "comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'",
 		4 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'",
 		5 => "link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'",
-		6 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='post_tag'",
-		7 => "wp_terms.term_id) FROM wp_terms INNER JOIN wp_term_taxonomy ON wp_terms.term_id = wp_term_taxonomy.term_id WHERE wp_term_taxonomy.taxonomy='link_category'",
+		6 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='post_tag'",
+		7 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='link_category'",
 		10 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
 		11 => "FROM $wpdb->comments WHERE comment_approved = '1'",
 		12 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'");

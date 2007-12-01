@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.54
+Version: 0.55
 Author URI: http://www.neotrinity.at
 */
 
@@ -143,7 +143,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.54\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.55\"/>");
 }
 
 /*
@@ -322,27 +322,27 @@ function GeneralStatsCounter($option) {
       global $wpdb;
 
 	$fields=array(
-		0 => "ID) as counter FROM $wpdb->users",
+		0 => "$wpdb->users.ID) FROM $wpdb->users",
 		1 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='category'",
-		2 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
-		3 => "comment_ID) as counter FROM $wpdb->comments WHERE comment_approved = '1'",
-		4 => "ID) as counter FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'",
-		5 => "link_id) as counter FROM $wpdb->links WHERE link_visible = 'Y'",
+		2 => "$wpdb->posts.ID) FROM $wpdb->posts WHERE $wpdb->posts.post_status = 'publish' AND $wpdb->posts.post_type = 'post'",
+		3 => "$wpdb->comments.comment_ID) FROM $wpdb->comments WHERE $wpdb->comments.comment_approved = '1'",
+		4 => "$wpdb->posts.ID) FROM $wpdb->posts WHERE $wpdb->posts.post_status = 'publish' AND $wpdb->posts.post_type = 'page'",
+		5 => "$wpdb->links.link_id) FROM $wpdb->links WHERE $wpdb->links.link_visible = 'Y'",
 		6 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='post_tag'",
 		7 => "$wpdb->terms.term_id) FROM $wpdb->terms INNER JOIN $wpdb->term_taxonomy ON $wpdb->terms.term_id = $wpdb->term_taxonomy.term_id WHERE $wpdb->term_taxonomy.taxonomy='link_category'",
-		10 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'post'",
-		11 => "FROM $wpdb->comments WHERE comment_approved = '1'",
-		12 => "FROM $wpdb->posts WHERE post_status = 'publish' AND post_type = 'page'");
+		10 => "FROM $wpdb->posts WHERE $wpdb->posts.post_status = 'publish' AND $wpdb->posts.post_type = 'post'",
+		11 => "FROM $wpdb->comments WHERE $wpdb->comments.comment_approved = '1'",
+		12 => "FROM $wpdb->posts WHERE $wpdb->posts.post_status = 'publish' AND $wpdb->posts.post_type = 'page'");
 
 	$fieldsAttributes=array(
-		10 => "post_content",
-		11 => "comment_content",
-		12 => "post_content");
+		10 => "$wpdb->posts.post_content",
+		11 => "$wpdb->comments.comment_content",
+		12 => "$wpdb->posts.post_content");
 
  	$fieldsCountAttributes=array(
-		10 => "ID",
-		11 => "comment_ID",
-		12 => "ID");
+		10 => "$wpdb->posts.ID",
+		11 => "$wpdb->comments.comment_ID",
+		12 => "$wpdb->posts.ID");
 
       $result=0;
 

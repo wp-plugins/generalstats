@@ -16,9 +16,11 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 
 **Now with Drag and Drop admin menu page**
 
-Please find the version for wordpress 2.1 and 2.2 [here](http://svn.wp-plugins.org/generalstats/tags/wordpress%202.1%20-%202.2/)
+Please find the version for wordpress
 
-Please find the version for wordpress minor 2.1 [here](http://svn.wp-plugins.org/generalstats/tags/wordpress%20minor%202.1/)
+* 2.3 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
+* 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
+* minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
 
 == Installation ==
 

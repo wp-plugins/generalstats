@@ -1,0 +1,29 @@
+=== GeneralStats ===
+Contributors: neoxx
+Donate link: http://www.neotrinity.at/projects/
+Tags: statistics, stats, counting, count
+Requires at least: 1.5
+Tested up to: 2.0
+Stable tag: 0.11
+
+Count the number of users, categories, posts, comments, pages, words in posts, words in comments and words in pages.
+
+== Description ==
+
+Count the number of users, categories, posts, comments, pages, words in posts, words in comments and words in pages.
+
+**full-optionpage-configurable, easy to integrate**
+
+== Installation ==
+
+1. Put both the general-stats.php file in your WordPress plugins directory (usually wp-content/plugins).
+
+2. In the WordPress admin console, go to the Plugins tab, and activate the GeneralStats plugin.
+
+3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it.
+Feel free to play around and see the result in the section preview at the bottom of the options page.
+
+4. Put this code into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear:
+`<?php GeneralStatsComplete(); ?>`
+
+5. Drink a beer, smoke a cigarette or celebrate in a way you like!

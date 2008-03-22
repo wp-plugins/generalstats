@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.56
+Version: 0.60
 Author URI: http://www.neotrinity.at
 */
 
@@ -62,51 +62,68 @@ function generalstats_admin_head() {
 
 ?>
 
+<?php
+	global $wp_version;
+
+	/*
+	check if wordpress_admin_themes are available
+	*/
+
+	if (version_compare($wp_version, "2.5", ">=")) {
+		global $_wp_admin_css_colors;
+
+		$current_color = get_user_option('admin_color');
+		if ( empty($current_color) )
+			$current_color = 'fresh';
+
+
+		$current_wp_admin_css_colors=$_wp_admin_css_colors[$current_color]->colors;
+
+	}
+
+	/*
+	if themes are not available, use default colors
+	*/
+
+	else {
+		$current_wp_admin_css_colors=array("#14568a", "#14568a", "", "#c3def1");
+	}
+?>
+
      <style type="text/css">
 
       li.generalstats_sortablelist {
-  		background-color : #14568a;
-		color: #c3def1;
+		background-color: <?php echo $current_wp_admin_css_colors[1]; ?>;
+		color: <?php echo $current_wp_admin_css_colors[3]; ?>;
 		cursor : move;
 		padding: 3px 5px 3px 5px;
       }
 
       ul.generalstats_sortablelist {
 		float: left;
-		border: 1px dotted;
+		border: 1px <?php echo $current_wp_admin_css_colors[0]; ?> solid;
 		list-style-image : none;
 		list-style-type : none;
 		margin: 10px 20px 20px 30px;
 		padding: 10px;
       }
 
-      #generalstats_DragandDrop{
+      #generalstats_DragandDrop {
 		cursor : move;
-		margin: 10px 140px 0px 0px;
+		margin: 10px 100px 0px 0px;
 		float: right;
 		border: 1px dotted;
-		width: 175px;
+		width: 270px;
 		padding: 5px;
       }
 
-      #generalstats_DragandDrop_Change{
-		cursor : default;
-		margin-top: 10px;
-		background: url( images/fade-butt.png );
-		border: 3px double #999;
-		border-left-color: #ccc;
-		border-top-color: #ccc;
-		color: #333;
-		padding: 0.25em;
-		width: 162px;
-		text-align: center;
-      }
+	#generalstats_DragandDrop_Edit_Label {
+		background-color: <?php echo $current_wp_admin_css_colors[1]; ?>;
+		color: <?php echo $current_wp_admin_css_colors[3]; ?>;
+	}
 
-	#generalstats_DragandDrop_Change:active {
-		background: #f4f4f4;
-		border: 3px double #ccc;
-		border-left-color: #999;
-		border-top-color: #999;
+	#generalstats_DragandDrop_Edit_Message {
+		color: <?php echo $current_wp_admin_css_colors[0]; ?>;
 	}
 
 	img.generalstats_arrowbutton {
@@ -143,7 +160,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.56\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.60\"/>");
 }
 
 /*
@@ -592,112 +609,114 @@ function createGeneralStatsOptionPage() {
 
     <div class="submit">
       <input type="button" id="info_update_click" name="info_update_click" value="<?php _e('Update options') ?>" />
-      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" />
+      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" /><br /><br />
     </div>
 
          <a name="<?php echo($fieldsPre); ?>Drag_and_Drop"></a><h2>Drag and Drop Layout</h2>
 
-     <fieldset>
-        <legend>It maybe a good start for GeneralStats first-timers to click on <em>Load defaults</em>.</legend>
-        <legend>You can customize the descriptions by clicking on the desired field in each list, whereas the fieldname is in the brackets.</legend>
-        <legend>Don't forget to click <em>Change</em> after adopting and <em>Update options</em> after you're finished.</legend>
-        <legend>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be loaded via the <em>Load defaults</em> button)</legend>
-        <legend>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).<br /><br /></legend>
-        <legend>If you like to support the development of this plugin, donation are welcome. :)<br /></legend>
-        <legend><form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="neotrinity.at" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="USD" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br /><br /></legend>
-     </fieldset>
+        <ul><li>It may be a good start for GeneralStats first-timers to click on <em>Load defaults</em>.</li>
+        <li>You can customize the descriptions by clicking on the desired field in each list, whereas the fieldname is in the brackets.
+        Don't forget to click <em>Change</em> after adopting and <em>Update options</em> after you're finished.</li>
+        <li>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be populated via the <em>Load defaults</em> button)</li>
+        <li>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).</li>
+        <li>You can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the <em>php function GeneralStatsComplete()</em> wherever you like.</li></ul>
 
-     <fieldset>
-	  <legend>Taken Tags</legend>
-     </fieldset>
+        If you like to support the development of this plugin, donations are welcome. :) Maybe you also want to <a href="link-add.php">add a link</a> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
+
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="neotrinity.at" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="USD" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br /><br />
+
+     <h3>Taken Tags</h3>
 
      <?php echo($listTaken); ?>
 
      <div id="generalstats_DragandDrop">
 
-     <fieldset>
-        <legend><label for="generalstats_DragandDrop_Edit_Text">Fieldname</label></legend>
-	  <input disabled="disabled" style="color: #c3def1; background-color: #14568a" name="generalstats_DragandDrop_Edit_Label" id="generalstats_DragandDrop_Edit_Label" type="text" size="20" maxlength="20" />
-     </fieldset>
+     <table class="form-table" style="margin-bottom:0">
+        <tr><td><label for="generalstats_DragandDrop_Edit_Text">Fieldname</label></td>
+	  <td><input disabled="disabled" name="generalstats_DragandDrop_Edit_Label" id="generalstats_DragandDrop_Edit_Label" type="text" size="20" maxlength="20" /></td>
+     </tr>
 
-     <fieldset>
-        <legend><label for="generalstats_DragandDrop_Edit_Text">Value</label></legend>
-        <input onkeyup="if(event.keyCode==13) generalstats_changeDragandDropEdit();" name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" disabled="disabled" type="text" size="20" maxlength="20" />
-     </fieldset>
+     <tr>
+        <td><label for="generalstats_DragandDrop_Edit_Text">Value</label></td>
+        <td><input onkeyup="if(event.keyCode==13) generalstats_changeDragandDropEdit();" name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" disabled="disabled" type="text" size="20" maxlength="20" /></td>
+     </tr>
 
-     <fieldset>
-	  <legend style="display:none; color:#14568a" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message"><em>Successfully Changed!</em></legend>
-        <input type="button" id="generalstats_DragandDrop_Change" value="Change" />
-     </fieldset>
+     <tr style="display:none" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message">
+	  <td colspan="2" style="font-weight:bold">Successfully Changed!</td>
+     </tr>
+
+     <tr>
+        <td colspan="2"><input type="button" id="generalstats_DragandDrop_Change" value="Change" /></td>
+     </tr>
+
+     </table>
 
      </div>
 
      <br style="clear:both" />
 
-     <fieldset>
-        <legend>Available Tags</legend>
-     </fieldset>
+     <h3>Available Tags</h3>
+
      <?php echo($listAvailable); ?>
 
        <form method="post">
 
           <h2>Tags</h2>
 
-     <fieldset>
-        <legend>This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.</legend>
-        <legend>Changes to positions which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">dynamic section</a> after pressing <em>Update options</em>.</legend>
-        <legend>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be loaded via the <em>Load defaults</em> button)</legend>
-        <legend>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).<br /><br /></legend>
-     </fieldset>
+        This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.
+        Changes to positions which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">dynamic section</a> after pressing <em>Update options</em>.
 
-    <?php
+    <table class="form-table"><?php
 
      foreach ($fields as $field) {
-          echo("<fieldset>");
-            echo("<legend><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
+          echo("<tr>");
+            echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
             _e($field);
-            echo("</label></legend>");
-              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
-              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" />");
-          echo("</fieldset>");
+            echo("</label></td>");
+              echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
+              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" /></td>");
+          echo("</tr>");
      }
 
-     ?>
+     ?></table><br /><br />
 
         <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2>CSS-Tags</h2>
 
-     <?php
+    <table class="form-table"><?php
 
      foreach ($csstags as $csstag) {
-          echo("<fieldset>");
-            echo("<legend><label for=\"".$fieldsPre.$csstag."\">");
+          echo("<tr>");
+            echo("<td><label for=\"".$fieldsPre.$csstag."\">");
             _e($csstag);
-            echo("</label></legend>");
-              echo("<input type=\"text\" size=\"30\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" />");
-          echo("</fieldset>");
+            echo("</label></td>");
+              echo("<td><input type=\"text\" size=\"30\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" /></td>");
+          echo("</tr>");
      }
 
      ?>
 
-     <fieldset>
-        <legend><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></legend>
-            <input type="text" size="2" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" />
-      </fieldset>
+     <tr>
+        <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></td>
+            <td><input type="text" size="2" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
+      </tr>
+    </table><br /><br />
 
         <h2>Administrative Options</h2>
 
-     <fieldset>
-        <legend><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></legend>
-            <input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" />
-      </fieldset>
+    <table class="form-table">
+     <tr>
+        <td><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></td>
+            <td><input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
+      </tr>
 
-     <fieldset>
-        <legend><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></legend>
-            <input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" />
-      </fieldset>
+     <tr>
+        <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></td>
+            <td><input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
+      </tr>
+    </table><br /><br />
 
     <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
-    <?php GeneralStatsComplete(); ?><br /><br />
+    <?php GeneralStatsComplete(); ?>
 
     <div class="submit">
       <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />

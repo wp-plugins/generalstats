@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.60
+Version: 0.70
 Author URI: http://www.neotrinity.at
 */
 
@@ -160,7 +160,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.60\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.70\"/>");
 }
 
 /*
@@ -451,6 +451,25 @@ function addGeneralStatsOptionPage() {
 }
 
 /*
+produce toggle button for showing and hiding sections
+*/
+
+function generalstats_open_close_section($section, $plugin_url, $default) {
+
+	if ($default==='1') {
+		$defaultImage='down';
+		$defaultAlt='hide';
+	}
+	else {
+		$defaultImage='right';
+		$defaultAlt='show';
+	}
+
+	echo("<img onclick=\"generalstats_trigger_effect(this, '".$section."', 'blind', '".$plugin_url."arrow_right_blue.png', '".$plugin_url."arrow_down_blue.png');\" alt=\"".$defaultAlt." Section\" src=\"".$plugin_url."arrow_".$defaultImage."_blue.png\" />&nbsp;");
+
+}
+
+/*
 Option Page
 */
 
@@ -475,13 +494,15 @@ function createGeneralStatsOptionPage() {
     $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
 	5 => "", 10 => "", 11 => "", 12 => "");
     $fields_description_defaults=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
-    $csstags_defaults=array("<ul>", "</ul>", "<li><em>", "</em>&nbsp;", "", "</li>");
+    $csstags_defaults=array("<ul>", "</ul>", "<li><strong>", "</strong>&nbsp;", "", "</li>");
 
     $Thousand_Delimiter="Thousand_Delimiter";
     $Cache_Time="Cache_Time";
     $Rows_at_Once="Rows_at_Once";
 
-    /*
+    $sections=array('Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
+
+   /*
     configuration changed => store parameters
     */
 
@@ -500,6 +521,10 @@ function createGeneralStatsOptionPage() {
 
 	  update_option($fieldsPre.$Cache_Time, $_POST[$fieldsPre.$Cache_Time]);
         update_option($fieldsPre.$Rows_at_Once, $_POST[$fieldsPre.$Rows_at_Once]);
+
+        foreach ($sections as $key => $section) {
+            update_option($fieldsPre.$key, $_POST[$fieldsPre.$key.'_Show']);
+        }
 
         ?><div class="updated"><p><strong>
         <?php _e('Configuration changed!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
@@ -525,10 +550,18 @@ function createGeneralStatsOptionPage() {
 	  update_option($fieldsPre.$Cache_Time, '600');
 	  update_option($fieldsPre.$Rows_at_Once, '100');
 
+        foreach ($sections as $key => $section) {
+            update_option($fieldsPre.$key, $section);
+        }
+
         ?><div class="updated"><p><strong>
         <?php _e('Defaults loaded!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
       <?php }
+
+    foreach($sections as $key => $section) {
+	if (get_option($fieldsPre.$key)!="") $sections[$key] = get_option($fieldsPre.$key);
+    }
 
     $orders=array();
 
@@ -641,7 +674,7 @@ function createGeneralStatsOptionPage() {
         <td><input onkeyup="if(event.keyCode==13) generalstats_changeDragandDropEdit();" name="generalstats_DragandDrop_Edit_Text" id="generalstats_DragandDrop_Edit_Text" disabled="disabled" type="text" size="20" maxlength="20" /></td>
      </tr>
 
-     <tr style="display:none" id="generalstats_DragandDrop_Edit_Message" name="generalstats_DragandDrop_Edit_Message">
+     <tr style="display:none" id="generalstats_DragandDrop_Edit_Message">
 	  <td colspan="2" style="font-weight:bold">Successfully Changed!</td>
      </tr>
 
@@ -659,9 +692,11 @@ function createGeneralStatsOptionPage() {
 
      <?php echo($listAvailable); ?>
 
-       <form method="post">
+       <form action="options-general.php?page=generalstats/general-stats.php" method="post">
 
-          <h2>Tags</h2>
+          <h2><?php generalstats_open_close_section($fieldsPre.'Static_Tags_Section', $plugin_url, $sections['Static_Tags_Section']); ?>Static Tags</h2>
+
+	<div id="<?php echo($fieldsPre); ?>Static_Tags_Section" <?php if ($sections['Static_Tags_Section']==='0') { ?>style="display:none"<?php } ?>>
 
         This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.
         Changes to positions which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">dynamic section</a> after pressing <em>Update options</em>.
@@ -678,9 +713,11 @@ function createGeneralStatsOptionPage() {
           echo("</tr>");
      }
 
-     ?></table><br /><br />
+     ?></table></div><br /><br />
 
-        <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2>CSS-Tags</h2>
+          <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'CSS_Tags_Section', $plugin_url, $sections['CSS_Tags_Section']); ?>CSS-Tags</h2>
+
+	<div id="<?php echo($fieldsPre); ?>CSS_Tags_Section" <?php if ($sections['CSS_Tags_Section']==='0') { ?>style="display:none"<?php } ?>>
 
     <table class="form-table"><?php
 
@@ -699,29 +736,39 @@ function createGeneralStatsOptionPage() {
         <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></td>
             <td><input type="text" size="2" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
       </tr>
-    </table><br /><br />
+    </table></div><br /><br />
 
-        <h2>Administrative Options</h2>
+          <h2><?php generalstats_open_close_section($fieldsPre.'Administrative_Options_Section', $plugin_url, $sections['Administrative_Options_Section']); ?>Administrative Options</h2>
+
+	<div id="<?php echo($fieldsPre); ?>Administrative_Options_Section" <?php if ($sections['Administrative_Options_Section']==='0') { ?>style="display:none"<?php } ?>>
 
     <table class="form-table">
      <tr>
         <td><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></td>
-            <td><input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
       </tr>
 
      <tr>
         <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></td>
-            <td><input type="text" onBlur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
       </tr>
-    </table><br /><br />
+    </table></div><br /><br />
 
     <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
     <?php GeneralStatsComplete(); ?>
 
     <div class="submit">
-      <input type="submit" name="info_update" value="<?php _e('Update options') ?>" />
-      <input type="submit" name="load_default" value="<?php _e('Load defaults') ?>" />
+      <input type="submit" name="info_update" id="info_update" value="<?php _e('Update options') ?>" />
+      <input type="submit" name="load_default" id="load_default" value="<?php _e('Load defaults') ?>" />
     </div>
+
+    <?php
+
+	foreach($sections as $key => $section) {
+		echo("<input type=\"hidden\" id=\"".$fieldsPre.$key."_Show\" name=\"".$fieldsPre.$key."_Show\" value=\"".$section."\" />");
+	}
+
+    ?>
 
     </form>
     </div>
@@ -850,7 +897,7 @@ function createGeneralStatsOptionPage() {
 	*/
 
 	for (var i = 0; i < fields.length; i++) {
-		document.getElementsByName(fieldPre+fields[i]+fieldPost)[0].value = "";
+		document.getElementById(fieldPre+fields[i]+fieldPost).value = "";
 	}
 
 	/*
@@ -865,7 +912,7 @@ function createGeneralStatsOptionPage() {
 
 		for (var j = 0; j < keys.length; j++) {
 			if (keys[j]==sorted_ids[i]) {
-				document.getElementsByName(fieldPre+fields[j]+fieldPost)[0].value = i+1;
+				document.getElementById(fieldPre+fields[j]+fieldPost).value = i+1;
 			}
 		}
 	}
@@ -964,14 +1011,14 @@ function createGeneralStatsOptionPage() {
 	*/
 
 	function generalstats_adoptDragandDropEdit (key) {
-		document.getElementsByName('generalstats_DragandDrop_Edit_Message')[0].style.display='none';
+		document.getElementById('generalstats_DragandDrop_Edit_Message').style.display='none';
 
 		for (var j = 0; j < keys.length; j++) {
 			if (keys[j]==key) {
-				document.getElementsByName('generalstats_DragandDrop_Edit_Label')[0].value = fields[j];
-				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value = document.getElementsByName(fieldPre+fields[j]+'_Description')[0].value; 
-				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].disabled=null;
-				document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].focus();
+				document.getElementById('generalstats_DragandDrop_Edit_Label').value = fields[j];
+				document.getElementById('generalstats_DragandDrop_Edit_Text').value = document.getElementById(fieldPre+fields[j]+'_Description').value; 
+				document.getElementById('generalstats_DragandDrop_Edit_Text').disabled=null;
+				document.getElementById('generalstats_DragandDrop_Edit_Text').focus();
 			}
 		}
 	}
@@ -981,17 +1028,17 @@ function createGeneralStatsOptionPage() {
 	*/
 
 	function generalstats_changeDragandDropEdit () {
-		var fieldName= document.getElementsByName('generalstats_DragandDrop_Edit_Label')[0].value;
+		var fieldName= document.getElementById('generalstats_DragandDrop_Edit_Label').value;
 
 		if (fieldName.length>0) {
-			document.getElementsByName( fieldPre + fieldName +'_Description')[0].value = document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value;
+			document.getElementById( fieldPre + fieldName +'_Description').value = document.getElementById('generalstats_DragandDrop_Edit_Text').value;
 			new Effect.Highlight(document.getElementById('generalstats_DragandDrop'),{startcolor:'#30df8b'});
-			new Effect.Appear(document.getElementsByName('generalstats_DragandDrop_Edit_Message')[0]);
+			new Effect.Appear(document.getElementById('generalstats_DragandDrop_Edit_Message'));
 
 			//adopt drag and drop table
 			for (var j = 0; j < fields.length; j++) {
 				if (fields[j]==fieldName) {
-					document.getElementById('Tags_'+keys[j]).childNodes[2].nodeValue= document.getElementsByName('generalstats_DragandDrop_Edit_Text')[0].value+' ('+fieldName+')';
+					document.getElementById('Tags_'+keys[j]).childNodes[2].nodeValue= document.getElementById('generalstats_DragandDrop_Edit_Text').value+' ('+fieldName+')';
 					new Effect.Highlight(document.getElementById('Tags_'+keys[j]),{startcolor:'#30df8b'});
 				}
 			}
@@ -1004,12 +1051,38 @@ function createGeneralStatsOptionPage() {
 		}
 	}
 
+	/*
+	toggles a div together with an image
+	inspired by pnomolos
+	http://godbit.com/forum/viewtopic.php?id=1111
+	*/
+
+	function generalstats_trigger_effect(src_element, div_id, effect, first_img, second_img){
+		Effect.toggle(div_id, effect, {afterFinish:function(){
+
+			if (src_element.src.match(first_img)) {
+				src_element.src = second_img;
+				src_element.alt = 'hide section';
+				document.getElementById(div_id+'_Show').value =  '1';
+			}
+
+			else {
+				src_element.src = first_img;
+				src_element.alt = 'show section';
+				document.getElementById(div_id+'_Show').value =  '0';
+			}
+
+		}});
+
+		return true;
+	}
+
 	new Draggable('generalstats_DragandDrop');
 
       Event.observe('generalstats_DragandDrop_Change', 'click', function(e){ generalstats_changeDragandDropEdit(); });
 
-      Event.observe('info_update_click', 'click', function(e){ document.getElementsByName('info_update')[0].click(); });
-      Event.observe('load_default_click', 'click', function(e){ document.getElementsByName('load_default')[0].click(); });
+      Event.observe('info_update_click', 'click', function(e){ document.getElementById('info_update').click(); });
+      Event.observe('load_default_click', 'click', function(e){ document.getElementById('load_default').click(); });
 
       <?php echo($listTakenListeners); ?>
       <?php echo($listAvailableListeners); ?>

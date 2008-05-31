@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
 Author: Bernhard Riedl
-Version: 0.70
+Version: 0.71
 Author URI: http://www.neotrinity.at
 */
 
@@ -160,7 +160,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.70\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.71\"/>");
 }
 
 /*
@@ -378,8 +378,24 @@ function GeneralStatsCounter($option) {
 		*/
 
       	else {
+			/*
+			SABRE CORPORATION
+			http://wordpress.org/extend/plugins/sabre/
+			*/
+			if ($option==0 && defined('SABRE_TABLE')) {
+				$fields[0]="u.ID) FROM $wpdb->users as u, ".SABRE_TABLE." as s WHERE u.ID=s.user_id AND s.status in ('ok') UNION SELECT COUNT(u.ID) FROM $wpdb->users as u LEFT JOIN ".SABRE_TABLE." as s ON u.ID=s.user_id WHERE s.user_id IS NULL";
+			}
+
 		      $results = $wpdb->get_col("SELECT COUNT(" .$fields[$option]);
 			$result=$results[0];
+
+			/*
+			SABRE CORPORATION
+			http://wordpress.org/extend/plugins/sabre/
+			*/
+			if ($option==0 && defined('SABRE_TABLE')) {
+				$result+=$results[1];
+			}
       	}
 
 	}

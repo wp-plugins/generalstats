@@ -34,7 +34,7 @@ Please find the version for wordpress
 3. Go to the Options/GeneralStats Tab and configure whatever you like. You can add stats to the output by inserting a number into the position field and an optional description next to it or you can use the AJAX functionality in the Drag and Drop section.
 Feel free to play around and see the result in the section preview at the bottom of the options page. If you are new to GeneralStats, it's a good start to load the defaults by clicking the button in the right top or lower corner.
 
-4. If you got widget functionality by either using a WordPress 2.3 (or higher) or [the widgets plugin](http://wordpress.org/extend/plugins/widgets/), just drag and drop GeneralStats on your dynamic sidebar in the presentation menu and name it appropriately. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
+4. If you got widget functionality by either using WordPress 2.3 (or higher) or [the widgets plugin](http://wordpress.org/extend/plugins/widgets/) together with a widget-compatible theme, just drag and drop GeneralStats on your dynamic sidebar in the presentation menu and name it appropriately. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php), footer (footer.php) or where you want it to appear.
 
 5. Drink a beer, smoke a cigarette or celebrate in a way you like! (and maybe you want to add a link to [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/))
 

@@ -3,9 +3,9 @@
 /*
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
-Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages. - Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!
+Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.71
+Version: 0.72
 Author URI: http://www.neotrinity.at
 */
 
@@ -40,6 +40,13 @@ called from init hook
 function generalstats_init() {
 	add_action('wp_head', 'generalstats_wp_head');
 	add_action('admin_menu', 'addGeneralStatsOptionPage');
+	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', -10, 2);
+}
+
+function generalstats_adminmenu_plugin_actions($links, $file) {
+	if ($file == 'generalstats/general-stats.php')
+		$links[] = "<a href='options-general.php?page=generalstats/general-stats.php'>Settings</a>";
+	return $links;
 }
 
 /*
@@ -160,7 +167,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.71\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.72\"/>");
 }
 
 /*

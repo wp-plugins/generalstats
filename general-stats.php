@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.72
+Version: 0.73
 Author URI: http://www.neotrinity.at
 */
 
@@ -111,7 +111,7 @@ function generalstats_admin_head() {
 		border: 1px <?php echo $current_wp_admin_css_colors[0]; ?> solid;
 		list-style-image : none;
 		list-style-type : none;
-		margin: 10px 20px 20px 30px;
+		margin: 10px 20px 20px 0px;
 		padding: 10px;
       }
 
@@ -167,7 +167,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.72\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.73\"/>");
 }
 
 /*
@@ -614,7 +614,7 @@ function createGeneralStatsOptionPage() {
     foreach ($orders as $key => $order) {
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';
 	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
-	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:20px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
         $available_Fields=GeneralStats_array_remval($key, $available_Fields);
         $listTaken.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
@@ -622,7 +622,7 @@ function createGeneralStatsOptionPage() {
     foreach($available_Fields as $key){
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';
 	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
-	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:20px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
 	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
 
@@ -652,8 +652,8 @@ function createGeneralStatsOptionPage() {
     $sizeListAvailable=sizeof($available_Fields)*$elementHeight;
     if ($sizeListAvailable<=0) $sizeListAvailable=$elementHeight;
 
-    $listTaken="<ul class=\"generalstats_sortablelist\" id=\"listTaken\" style=\"height:".$sizeListTaken."px;width:400px;\">".$listTaken."</ul>";
-    $listAvailable="<ul class=\"generalstats_sortablelist\" id=\"listAvailable\" style=\"height:".$sizeListAvailable."px;width:400px;\">".$listAvailable."</ul>";
+    $listTaken="<div style=\"cursor:move\" id=\"generalstats_listTaken\"><h3>Taken Tags</h3><ul class=\"generalstats_sortablelist\" id=\"listTaken\" style=\"height:".$sizeListTaken."px;width:370px;\">".$listTaken."</ul></div>";
+    $listAvailable="<div style=\"cursor:move\" id=\"generalstats_listAvailable\"><h3>Available Tags</h3><ul class=\"generalstats_sortablelist\" id=\"listAvailable\" style=\"height:".$sizeListAvailable."px;width:370px;\">".$listAvailable."</ul></div>";
 
     /*
     options form
@@ -680,8 +680,6 @@ function createGeneralStatsOptionPage() {
         If you like to support the development of this plugin, donations are welcome. :) Maybe you also want to <a href="link-add.php">add a link</a> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
 
         <form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="neotrinity.at" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="USD" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br /><br />
-
-     <h3>Taken Tags</h3>
 
      <?php echo($listTaken); ?>
 
@@ -710,8 +708,6 @@ function createGeneralStatsOptionPage() {
      </div>
 
      <br style="clear:both" />
-
-     <h3>Available Tags</h3>
 
      <?php echo($listAvailable); ?>
 
@@ -777,7 +773,9 @@ function createGeneralStatsOptionPage() {
       </tr>
     </table></div><br /><br />
 
-    <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview (call GeneralStatsComplete(); wherever you like!)</h2>
+    <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview</h2>
+
+You can publish this output either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the <em>php function GeneralStatsComplete()</em> wherever you like.<br /><br />
     <?php GeneralStatsComplete(); ?>
 
     <div class="submit">
@@ -1100,6 +1098,8 @@ function createGeneralStatsOptionPage() {
 		return true;
 	}
 
+	new Draggable('generalstats_listTaken');
+	new Draggable('generalstats_listAvailable');
 	new Draggable('generalstats_DragandDrop');
 
       Event.observe('generalstats_DragandDrop_Change', 'click', function(e){ generalstats_changeDragandDropEdit(); });

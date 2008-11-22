@@ -32,7 +32,7 @@ Please find the version for WordPress
 
 3. Navigate to the Settings/GeneralStats tab and customize the stats according to your desires.
 
-4. If you got widget functionality just drag and drop GeneralStats on your dynamic sidebar in the Appearance Menu. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php) or where you want it to be published.
+4. If you got widget functionality just drag and drop GeneralStats on your dynamic sidebar in the Appearance Menu. Otherwise, put this code `<?php GeneralStatsComplete(); ?>` into your sidebar menu (sidebar.php) or where you want the results to be published.
 
 5. Be happy and celebrate! (and maybe you want to add a link to [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/))
 
@@ -52,8 +52,8 @@ This section is based on internal WordPress Javascript-libraries, which means th
 
 == Screenshots ==
 
-1. The first Screenshot shows the Options/GeneralStats Tab with the Drag and Drop Layout Section in the Admin Menu.
+1. This screenshot shows the Settings/GeneralStats Tab with the Drag and Drop Section in the Admin Menu.
 
-1. The second Screenshot shows the Options/GeneralStats Tab with the available tags in the Admin's Menu Static Section.
+2. This picture presents the GeneralStats Tab with the available tags in the Static Section.
 
-2. On the third Screenshot the available CSS Tags as well as the Preview Section can be seen.
+3. This screenshot shows the available CSS Tags as well as the Preview Section of the GeneralStats Tab.

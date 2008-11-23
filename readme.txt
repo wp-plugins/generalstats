@@ -48,7 +48,7 @@ Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should
 
 = Why is the 'Drag and Drop Layout' not working? =
 
-This section is based on internal WordPress Javascript-libraries, which means that it is only working with WordPress 2.1 or higher and you have to have Javascript enabled in your browser (this is a default setting in a common browser like Firefox)! The plugin is still fully functional without these constraints, but you need to customize your stats 'per hand', as in older versions of GeneralStats.
+This section is based on internal WordPress Javascript-libraries, which means that it is only working with WordPress 2.1 or higher and you have to have Javascript enabled in your browser (this is a default setting in a common browser like Firefox)! The plugin is still fully functional without these constraints, but you need to customize your stats manually, as in older versions of GeneralStats.
 
 == Screenshots ==
 

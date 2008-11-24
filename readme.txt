@@ -16,6 +16,7 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 * easy to integrate (ships with widget functionality)
 * high performing with caching technology and customizable memory usage
 * drag and drop admin menu page
+* clean uninstall
 * collaborates with [Sabre](http://wordpress.org/extend/plugins/sabre/) on user counts
 
 Please find the version for WordPress
@@ -28,7 +29,7 @@ Please find the version for WordPress
 
 1. Copy the `generalstats` directory into your WordPress Plugins directory (usually wp-content/plugins). Hint: With WordPress 2.7 and higher you can conduct this step within your Admin Menu.
 
-2. In the WordPress Admin Menu, go to the Plugins tab, and activate the GeneralStats plugin.
+2. In the WordPress Admin Menu go to the Plugins tab and activate the GeneralStats plugin.
 
 3. Navigate to the Settings/GeneralStats tab and customize the stats according to your desires.
 
@@ -48,7 +49,7 @@ Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should
 
 = Why is the 'Drag and Drop Layout' not working? =
 
-This section is based on internal WordPress Javascript-libraries, which means that it is only working with WordPress 2.1 or higher and you have to have Javascript enabled in your browser (this is a default setting in a common browser like Firefox)! The plugin is still fully functional without these constraints, but you need to customize your stats manually, as in older versions of GeneralStats.
+This section is based on internal WordPress Javascript-libraries, which means that it is only working with WordPress 2.1 or higher. In addition you have to have Javascript enabled in your browser (this is a default setting in a common browser like Firefox). The plugin is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
 
 == Screenshots ==
 

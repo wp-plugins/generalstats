@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.73
+Version: 0.80
 Author URI: http://www.neotrinity.at
 */
 
@@ -38,14 +38,18 @@ called from init hook
 */
 
 function generalstats_init() {
+	DEFINE ('GENERALSTATS_PLUGINURL', get_settings('siteurl'). '/'. str_replace( ABSPATH, '', dirname(__FILE__) . '/'));
+
 	add_action('wp_head', 'generalstats_wp_head');
 	add_action('admin_menu', 'addGeneralStatsOptionPage');
+
 	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', -10, 2);
 }
 
 function generalstats_adminmenu_plugin_actions($links, $file) {
 	if ($file == 'generalstats/general-stats.php')
 		$links[] = "<a href='options-general.php?page=generalstats/general-stats.php'>Settings</a>";
+
 	return $links;
 }
 
@@ -72,6 +76,8 @@ function generalstats_admin_head() {
 <?php
 	global $wp_version;
 
+	$current_wp_admin_css_colors=array();
+
 	/*
 	check if wordpress_admin_themes are available
 	*/
@@ -83,7 +89,6 @@ function generalstats_admin_head() {
 		if ( empty($current_color) )
 			$current_color = 'fresh';
 
-
 		$current_wp_admin_css_colors=$_wp_admin_css_colors[$current_color]->colors;
 
 	}
@@ -92,12 +97,17 @@ function generalstats_admin_head() {
 	if themes are not available, use default colors
 	*/
 
-	else {
+	if (sizeof($current_wp_admin_css_colors)<4) {
 		$current_wp_admin_css_colors=array("#14568a", "#14568a", "", "#c3def1");
 	}
 ?>
 
      <style type="text/css">
+
+	.generalstats_wrap ul {
+		list-style-type : disc;
+		padding: 5px 5px 5px 30px;
+	}
 
       li.generalstats_sortablelist {
 		background-color: <?php echo $current_wp_admin_css_colors[1]; ?>;
@@ -139,9 +149,8 @@ function generalstats_admin_head() {
 		margin-left: 5px;
 	}
 
-	img.generalstats_arrowbutton:hover {
-		border-bottom: 1px dotted #ffffff;
-		border-top: 1px dotted #ffffff;
+	img.generalstats_sectionbutton {
+		cursor: pointer;
 	}
 
       </style>
@@ -167,7 +176,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.73\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.80\"/>");
 }
 
 /*
@@ -477,7 +486,7 @@ function addGeneralStatsOptionPage() {
 produce toggle button for showing and hiding sections
 */
 
-function generalstats_open_close_section($section, $plugin_url, $default) {
+function generalstats_open_close_section($section, $default) {
 
 	if ($default==='1') {
 		$defaultImage='down';
@@ -488,7 +497,7 @@ function generalstats_open_close_section($section, $plugin_url, $default) {
 		$defaultAlt='show';
 	}
 
-	echo("<img onclick=\"generalstats_trigger_effect(this, '".$section."', 'blind', '".$plugin_url."arrow_right_blue.png', '".$plugin_url."arrow_down_blue.png');\" alt=\"".$defaultAlt." Section\" src=\"".$plugin_url."arrow_".$defaultImage."_blue.png\" />&nbsp;");
+	echo("<img class=\"generalstats_sectionbutton\" onclick=\"generalstats_trigger_effect(this, '".$section."', 'blind', '".GENERALSTATS_PLUGINURL."arrow_right_blue.png', '".GENERALSTATS_PLUGINURL."arrow_down_blue.png');\" alt=\"".$defaultAlt." Section\" src=\"".GENERALSTATS_PLUGINURL."arrow_".$defaultImage."_blue.png\" />&nbsp;");
 
 }
 
@@ -523,7 +532,7 @@ function createGeneralStatsOptionPage() {
     $Cache_Time="Cache_Time";
     $Rows_at_Once="Rows_at_Once";
 
-    $sections=array('Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
+    $sections=array('Instructions_Section' => '1', 'Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
 
    /*
     configuration changed => store parameters
@@ -582,6 +591,15 @@ function createGeneralStatsOptionPage() {
 
       <?php }
 
+      elseif (isset($_GET['cleanup'])) {
+
+	  generalstats_uninstall();
+
+        ?><div class="updated"><p><strong>
+        <?php _e('Settings deleted!')?></strong></p></div>
+
+      <?php }
+
     foreach($sections as $key => $section) {
 	if (get_option($fieldsPre.$key)!="") $sections[$key] = get_option($fieldsPre.$key);
     }
@@ -609,20 +627,18 @@ function createGeneralStatsOptionPage() {
 
     $beforeKey="Tags_";
 
-    $plugin_url = get_settings('siteurl') . '/wp-content/plugins/generalstats/';
-
     foreach ($orders as $key => $order) {
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key] .')';
-	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
-	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
+	  $upArrow='<img class="generalstats_arrowbutton" src="'.GENERALSTATS_PLUGINURL.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.GENERALSTATS_PLUGINURL.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
         $available_Fields=GeneralStats_array_remval($key, $available_Fields);
         $listTaken.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
 
     foreach($available_Fields as $key){
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';
-	  $upArrow='<img class="generalstats_arrowbutton" src="'.$plugin_url.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
-	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.$plugin_url.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
+	  $upArrow='<img class="generalstats_arrowbutton" src="'.GENERALSTATS_PLUGINURL.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
+	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.GENERALSTATS_PLUGINURL.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
 	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
     }
 
@@ -661,25 +677,42 @@ function createGeneralStatsOptionPage() {
 
     ?>
 
-    <div class="wrap">
+    <div class="wrap"><div class="generalstats_wrap">
 
     <div class="submit">
       <input type="button" id="info_update_click" name="info_update_click" value="<?php _e('Update options') ?>" />
-      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" /><br /><br />
+      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" />
     </div>
 
-         <a name="<?php echo($fieldsPre); ?>Drag_and_Drop"></a><h2>Drag and Drop Layout</h2>
+Welcome to the Settings-Page of <a target="_blank" href="http://www.neotrinity.at/projects/">GeneralStats</a>. This plugin counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
-        <ul><li>It may be a good start for GeneralStats first-timers to click on <em>Load defaults</em>.</li>
-        <li>You can customize the descriptions by clicking on the desired field in each list, whereas the fieldname is in the brackets.
-        Don't forget to click <em>Change</em> after adopting and <em>Update options</em> after you're finished.</li>
-        <li>Without filling out the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags</a>, your users might be disappointed... ;) (defaults can be populated via the <em>Load defaults</em> button)</li>
-        <li>Before you publish the results of the plugin you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a> to get the experience first (after pressing <em>Update options</em>).</li>
-        <li>You can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the <em>php function GeneralStatsComplete()</em> wherever you like.</li></ul>
+<h2><?php generalstats_open_close_section($fieldsPre.'Instructions_Section', $sections['Instructions_Section']); ?>Instructions</h2>
 
-        If you like to support the development of this plugin, donations are welcome. :) Maybe you also want to <a href="link-add.php">add a link</a> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
+	<div id="<?php echo($fieldsPre); ?>Instructions_Section" <?php if ($sections['Instructions_Section']==='0') { ?>style="display:none"<?php } ?>>
+
+        <ul><li>It may be a good start for GeneralStats first-timers to click on <strong>Load defaults</strong>.</li>
+        <li>You can add available or remove taken tags (like posts, users, etc. ) via drag and drop between the lists in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout Section</a>. To customize the descriptions click on the field which you want to change in any list and edit the output name in the form on the right. After clicking <strong>Change</strong> the selected tag's name is adopted in its list. The tags can be re-orderd within a list either by drag and drop or by clicking on the arrows on the particular tag's left hand side. Don't forget to save all your adjustments by clicking on <strong>Update options</strong>.<br />
+
+Hint: All parameters of GeneralStats can also be changed without the usage of Javascript in the <a href="#<?php echo($fieldsPre); ?>Static_Tags">Static Tags Section</a>.
+</li>
+        <li>Style-customizations can be made in the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags Section</a>. The <a href="#<?php echo($fieldsPre); ?>Administrative_Options">Administrative Options Section</a> reflects further settings for experts. (Defaults for both sections are automatically populated via the <strong>Load defaults</strong> button)</li>
+        <li>Before you publish the results you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a>.</li>
+        <li>Finally, you can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.</li>
+    <?php
+	if (!function_exists('register_uninstall_hook')) { ?>
+        <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly <a href="?page=generalstats/general-stats.php&amp;cleanup=true" onclick="javascript:return confirm('Are you sure you want to delete all your settings?')">click here</a> to clean up the database. Then disable it in the <a href="plugins.php">Plugins Tab</a> and delete the <code>generalstats</code> directory in your WordPress Plugins directory (usually wp-content/plugins) on your webserver.</li>
+    <?php }
+	else { ?>
+        <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly disable and delete it in the <a href="plugins.php">Plugins Tab</a>.</li>
+    <?php } ?>
+</ul></div>
+
+<h2>Support</h2>
+        If you like to support the development of this plugin, donations are welcome. <?php echo(convert_smilies(':)')); ?> Maybe you also want to <a href="link-add.php">add a link</a> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
 
         <form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="neotrinity.at" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="USD" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br /><br />
+
+         <a name="<?php echo($fieldsPre); ?>Drag_and_Drop"></a><h2>Drag and Drop Layout</h2>
 
      <?php echo($listTaken); ?>
 
@@ -711,14 +744,16 @@ function createGeneralStatsOptionPage() {
 
      <?php echo($listAvailable); ?>
 
+     <br style="clear:both" /><br />
+
        <form action="options-general.php?page=generalstats/general-stats.php" method="post">
 
-          <h2><?php generalstats_open_close_section($fieldsPre.'Static_Tags_Section', $plugin_url, $sections['Static_Tags_Section']); ?>Static Tags</h2>
+          <a name="<?php echo($fieldsPre); ?>Static_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'Static_Tags_Section', $sections['Static_Tags_Section']); ?>Static Tags</h2>
 
 	<div id="<?php echo($fieldsPre); ?>Static_Tags_Section" <?php if ($sections['Static_Tags_Section']==='0') { ?>style="display:none"<?php } ?>>
 
-        This is the static customizing section, forming the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout</a> section.
-        Changes to positions which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">dynamic section</a> after pressing <em>Update options</em>.
+        This static customizing section forms the mirror of the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout Section</a>.
+        Changes which you make here are only reflected in the <a href="#<?php echo($fieldsPre); ?>Drag_and_Drop">Drag and Drop Layout Section</a> after pressing <strong>Update options</strong>.
 
     <table class="form-table"><?php
 
@@ -734,9 +769,17 @@ function createGeneralStatsOptionPage() {
 
      ?></table></div><br /><br />
 
-          <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'CSS_Tags_Section', $plugin_url, $sections['CSS_Tags_Section']); ?>CSS-Tags</h2>
+          <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'CSS_Tags_Section', $sections['CSS_Tags_Section']); ?>CSS-Tags</h2>
 
 	<div id="<?php echo($fieldsPre); ?>CSS_Tags_Section" <?php if ($sections['CSS_Tags_Section']==='0') { ?>style="display:none"<?php } ?>>
+
+In this section you can customize the layout of <a href="#<?php echo($fieldsPre); ?>Preview">GeneralStats' output</a> after saving your changes by clicking on <strong>Update options</strong>. The structure of the available fields is as follows:<br /><br />
+
+[before_List]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;[before_Tag]<strong>[TAG 1]</strong>[after_Tag][before_Details]<strong>[COUNT 1]</strong>[after_Details]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;...<br />
+&nbsp;&nbsp;&nbsp;&nbsp;[before_Tag]<strong>[TAG n]</strong>[after_Tag][before_Details]<strong>[COUNT n]</strong>[after_Details]<br />
+[after_List]<br /><br />
 
     <table class="form-table"><?php
 
@@ -757,9 +800,11 @@ function createGeneralStatsOptionPage() {
       </tr>
     </table></div><br /><br />
 
-          <h2><?php generalstats_open_close_section($fieldsPre.'Administrative_Options_Section', $plugin_url, $sections['Administrative_Options_Section']); ?>Administrative Options</h2>
+          <a name="<?php echo($fieldsPre); ?>Administrative_Options"></a><h2><?php generalstats_open_close_section($fieldsPre.'Administrative_Options_Section', $sections['Administrative_Options_Section']); ?>Administrative Options</h2>
 
 	<div id="<?php echo($fieldsPre); ?>Administrative_Options_Section" <?php if ($sections['Administrative_Options_Section']==='0') { ?>style="display:none"<?php } ?>>
+
+These are the expert settings of GeneralStats. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/generalstats/faq/">FAQ</a> for further information.
 
     <table class="form-table">
      <tr>
@@ -775,7 +820,7 @@ function createGeneralStatsOptionPage() {
 
     <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview</h2>
 
-You can publish this output either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the <em>php function GeneralStatsComplete()</em> wherever you like.<br /><br />
+You can publish this output either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.<br /><br />
     <?php GeneralStatsComplete(); ?>
 
     <div class="submit">
@@ -792,7 +837,7 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
     ?>
 
     </form>
-    </div>
+    </div></div>
 
     <script type="text/javascript">
 
@@ -1118,5 +1163,48 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 
 add_action('init', 'generalstats_init');
 add_action('widgets_init', 'widget_generalstats_init');
+
+if ( function_exists('register_uninstall_hook') )
+	register_uninstall_hook( __FILE__, 'generalstats_uninstall' );
+
+/*
+database cleanup on uninstall
+*/
+
+function generalstats_uninstall() {
+	delete_option('widget_generalstats');
+
+	$fieldsPre="GeneralStats_";
+	$fieldsPost_Position="_Position";
+	$fieldsPost_Description="_Description";
+
+	$fields=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories", 10 => "Words_in_Posts", 11 => "Words_in_Comments", 12 => "Words_in_Pages");
+
+	$csstags=array("before_List", "after_List", "before_Tag", "after_Tag", "before_Details", "after_Details");
+$sections=array('Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
+
+	delete_option($fieldsPre.'Cache');
+	delete_option($fieldsPre.'Force_Cache_Refresh');
+	delete_option($fieldsPre.'Last_Cache_Time');
+
+	foreach ($fields as $field) {
+		delete_option($fieldsPre.$field.$fieldsPost_Position);
+		delete_option($fieldsPre.$field.$fieldsPost_Description);
+	}
+
+	foreach ($csstags as $csstag) {
+		delete_option($fieldsPre.$csstag);
+	}
+
+	delete_option($fieldsPre."Thousand_Delimiter");
+
+	delete_option($fieldsPre."Cache_Time");
+	delete_option($fieldsPre."Rows_at_Once");
+
+	foreach ($sections as $key => $section) {
+		delete_option($fieldsPre.$key);
+	}
+
+}
 
 ?>

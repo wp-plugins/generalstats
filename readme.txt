@@ -55,6 +55,4 @@ This section is based on internal WordPress Javascript-libraries, which means th
 
 1. This screenshot shows the Settings/GeneralStats Tab with the Drag and Drop Section in the Admin Menu.
 
-2. This picture presents the GeneralStats Tab with the available tags in the Static Section.
-
-3. This screenshot shows the available CSS Tags as well as the Preview Section of the GeneralStats Tab.
+2. This picture presents the Preview Section of the GeneralStats Tab in the Admin Menu.

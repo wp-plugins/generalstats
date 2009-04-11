@@ -5,11 +5,11 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.80
+Version: 0.81
 Author URI: http://www.neotrinity.at
 */
 
-/*  Copyright 2006-2008  Bernhard Riedl  (email : neo@neotrinity.at)
+/*  Copyright 2006-2009  Bernhard Riedl  (email : neo@neotrinity.at)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ function generalstats_init() {
 	add_action('wp_head', 'generalstats_wp_head');
 	add_action('admin_menu', 'addGeneralStatsOptionPage');
 
-	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', -10, 2);
+	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
 }
 
 function generalstats_adminmenu_plugin_actions($links, $file) {
@@ -176,7 +176,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.80\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.81\"/>");
 }
 
 /*
@@ -232,7 +232,7 @@ function GeneralStatsComplete() {
 	$cacheTime = get_option($fieldsPre.'Cache_Time');
 	$lastCacheTime = get_option($fieldsPre.'Last_Cache_Time');
 
-	$cacheAge = time() - $lastCacheTime;
+	$cacheAge = gmdate('U') - $lastCacheTime;
 
 	$cache = get_option($fieldsPre.'Cache');
 	$forceCacheRefresh = get_option($fieldsPre.'Force_Cache_Refresh');
@@ -246,7 +246,7 @@ function GeneralStatsComplete() {
 
 		update_option($fieldsPre.'Cache', GeneralStatsCreateOutput());
 		update_option($fieldsPre.'Force_Cache_Refresh','0');
-		update_option($fieldsPre.'Last_Cache_Time',time());
+		update_option($fieldsPre.'Last_Cache_Time',gmdate('U'));
 	}
 
 	echo get_option($fieldsPre.'Cache');

@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.81
+Version: 0.82
 Author URI: http://www.neotrinity.at
 */
 
@@ -176,7 +176,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.81\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.82\"/>");
 }
 
 /*
@@ -502,6 +502,17 @@ function generalstats_open_close_section($section, $default) {
 }
 
 /*
+Output JS
+*/
+
+function GeneralStatsOptionPageActionButtons($num) { ?>
+	    <div id="generalstats_actionbuttons_<?php echo($num); ?>" class="submit" style="display:none">
+      	<input type="button" id="info_update_click<?php echo($num); ?>" name="info_update_click<?php echo($num); ?>" value="<?php _e('Update options') ?>" />
+	      <input type="button" id="load_default_click<?php echo($num); ?>" name="load_default_click<?php echo($num); ?>" value="<?php _e('Load defaults') ?>" />
+	    </div>
+<?php }
+
+/*
 Option Page
 */
 
@@ -532,7 +543,7 @@ function createGeneralStatsOptionPage() {
     $Cache_Time="Cache_Time";
     $Rows_at_Once="Rows_at_Once";
 
-    $sections=array('Instructions_Section' => '1', 'Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
+    $sections=array('Instructions_Section' => '1', 'Static_Tags_Section' => '1', 'CSS_Tags_Section' => '1', 'Administrative_Options_Section' => '1');
 
    /*
     configuration changed => store parameters
@@ -668,8 +679,8 @@ function createGeneralStatsOptionPage() {
     $sizeListAvailable=sizeof($available_Fields)*$elementHeight;
     if ($sizeListAvailable<=0) $sizeListAvailable=$elementHeight;
 
-    $listTaken="<div style=\"cursor:move\" id=\"generalstats_listTaken\"><h3>Taken Tags</h3><ul class=\"generalstats_sortablelist\" id=\"listTaken\" style=\"height:".$sizeListTaken."px;width:370px;\">".$listTaken."</ul></div>";
-    $listAvailable="<div style=\"cursor:move\" id=\"generalstats_listAvailable\"><h3>Available Tags</h3><ul class=\"generalstats_sortablelist\" id=\"listAvailable\" style=\"height:".$sizeListAvailable."px;width:370px;\">".$listAvailable."</ul></div>";
+    $listTaken="<div style=\"cursor:move\" id=\"generalstats_listTaken\"><h3>Taken Tags</h3><ul class=\"generalstats_sortablelist\" id=\"gs_listTaken\" style=\"height:".$sizeListTaken."px;width:370px;\">".$listTaken."</ul></div>";
+    $listAvailable="<div style=\"cursor:move\" id=\"generalstats_listAvailable\"><h3>Available Tags</h3><ul class=\"generalstats_sortablelist\" id=\"gs_listAvailable\" style=\"height:".$sizeListAvailable."px;width:370px;\">".$listAvailable."</ul></div>";
 
     /*
     options form
@@ -679,12 +690,7 @@ function createGeneralStatsOptionPage() {
 
     <div class="wrap"><div class="generalstats_wrap">
 
-    <div class="submit">
-      <input type="button" id="info_update_click" name="info_update_click" value="<?php _e('Update options') ?>" />
-      <input type="button" id="load_default_click" name="load_default_click" value="<?php _e('Load defaults') ?>" />
-    </div>
-
-Welcome to the Settings-Page of <a target="_blank" href="http://www.neotrinity.at/projects/">GeneralStats</a>. This plugin counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
+<br /><br />Welcome to the Settings-Page of <a target="_blank" href="http://www.neotrinity.at/projects/">GeneralStats</a>. This plugin counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
 <h2><?php generalstats_open_close_section($fieldsPre.'Instructions_Section', $sections['Instructions_Section']); ?>Instructions</h2>
 
@@ -705,7 +711,11 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
 	else { ?>
         <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly disable and delete it in the <a href="plugins.php">Plugins Tab</a>.</li>
     <?php } ?>
-</ul></div>
+</ul>
+
+<?php GeneralStatsOptionPageActionButtons(1); ?>
+
+</div>
 
 <h2>Support</h2>
         If you like to support the development of this plugin, donations are welcome. <?php echo(convert_smilies(':)')); ?> Maybe you also want to <a href="link-add.php">add a link</a> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
@@ -746,6 +756,8 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
 
      <br style="clear:both" /><br />
 
+<?php GeneralStatsOptionPageActionButtons(2); ?>
+
        <form action="options-general.php?page=generalstats/general-stats.php" method="post">
 
           <a name="<?php echo($fieldsPre); ?>Static_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'Static_Tags_Section', $sections['Static_Tags_Section']); ?>Static Tags</h2>
@@ -762,12 +774,16 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
             echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
             _e($field);
             echo("</label></td>");
-              echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
-              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" /></td>");
+              echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" maxlength=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
+              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" maxlength=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" /></td>");
           echo("</tr>");
      }
 
-     ?></table></div><br /><br />
+     ?></table>
+
+<?php GeneralStatsOptionPageActionButtons(3); ?>
+
+</div><br /><br />
 
           <a name="<?php echo($fieldsPre); ?>CSS_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'CSS_Tags_Section', $sections['CSS_Tags_Section']); ?>CSS-Tags</h2>
 
@@ -788,7 +804,7 @@ In this section you can customize the layout of <a href="#<?php echo($fieldsPre)
             echo("<td><label for=\"".$fieldsPre.$csstag."\">");
             _e($csstag);
             echo("</label></td>");
-              echo("<td><input type=\"text\" size=\"30\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" /></td>");
+              echo("<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" /></td>");
           echo("</tr>");
      }
 
@@ -796,9 +812,13 @@ In this section you can customize the layout of <a href="#<?php echo($fieldsPre)
 
      <tr>
         <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></td>
-            <td><input type="text" size="2" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
+            <td><input type="text" size="2" maxlength="4" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
       </tr>
-    </table></div><br /><br />
+    </table>
+
+<?php GeneralStatsOptionPageActionButtons(4); ?>
+
+</div><br /><br />
 
           <a name="<?php echo($fieldsPre); ?>Administrative_Options"></a><h2><?php generalstats_open_close_section($fieldsPre.'Administrative_Options_Section', $sections['Administrative_Options_Section']); ?>Administrative Options</h2>
 
@@ -809,14 +829,18 @@ These are the expert settings of GeneralStats. Please consult the <a target="_bl
     <table class="form-table">
      <tr>
         <td><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></td>
-            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
       </tr>
 
      <tr>
         <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></td>
-            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
       </tr>
-    </table></div><br /><br />
+    </table>
+
+<?php GeneralStatsOptionPageActionButtons(5); ?>
+
+</div><br /><br />
 
     <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview</h2>
 
@@ -843,10 +867,10 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 
     /* <![CDATA[ */
 
-    var fieldPre = "GeneralStats_";
-    var fieldPost = "_Position";
-    var keys = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
-    var fields = ["Users", "Categories", "Posts", "Comments", "Pages", "Links", "Tags", "Link-Categories", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
+    var generalstats_fieldPre = "GeneralStats_";
+    var generalstats_fieldPost = "_Position";
+    var generalstats_keys = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+    var generalstats_fields = ["Users", "Categories", "Posts", "Comments", "Pages", "Links", "Tags", "Link-Categories", "Words_in_Posts", "Words_in_Comments", "Words_in_Pages"];
 
 	/*
 	original source from Nannette Thacker
@@ -923,16 +947,16 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
     create drag and drop lists
     */
 
-    Sortable.create("listTaken", {
+    Sortable.create("gs_listTaken", {
 	dropOnEmpty:true,
-	containment:["listTaken","listAvailable"],
+	containment:["gs_listTaken","gs_listAvailable"],
 	constraint:false,
 	onUpdate:function(){ generalstats_updateDragandDropLists(); }
 	});
 
-   Sortable.create("listAvailable", {
+   Sortable.create("gs_listAvailable", {
 	dropOnEmpty:true,
-	containment:["listTaken","listAvailable"],
+	containment:["gs_listTaken","gs_listAvailable"],
 	constraint:false
 	});
 
@@ -947,7 +971,7 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	get current fields order
 	*/
 
-	var sequence=Sortable.sequence('listTaken');
+	var sequence=Sortable.sequence('gs_listTaken');
 
 	if (sequence.length>0) {
 		var list = escape(sequence);
@@ -962,8 +986,8 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	clear all previously set values
 	*/
 
-	for (var i = 0; i < fields.length; i++) {
-		document.getElementById(fieldPre+fields[i]+fieldPost).value = "";
+	for (var i = 0; i < generalstats_fields.length; i++) {
+		document.getElementById(generalstats_fieldPre+generalstats_fields[i]+generalstats_fieldPost).value = "";
 	}
 
 	/*
@@ -976,9 +1000,9 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 		looks up keys array for matching index
 		*/
 
-		for (var j = 0; j < keys.length; j++) {
-			if (keys[j]==sorted_ids[i]) {
-				document.getElementById(fieldPre+fields[j]+fieldPost).value = i+1;
+		for (var j = 0; j < generalstats_keys.length; j++) {
+			if (generalstats_keys[j]==sorted_ids[i]) {
+				document.getElementById(generalstats_fieldPre+generalstats_fields[j]+generalstats_fieldPost).value = i+1;
 			}
 		}
 	}
@@ -991,14 +1015,14 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 
 	var listTakenLength=sorted_ids.length*elementHeight;
 	if (listTakenLength<=0) listTakenLength=elementHeight;
-	document.getElementById('listTaken').style.height = (listTakenLength)+'px';
+	document.getElementById('gs_listTaken').style.height = (listTakenLength)+'px';
 
-	list = escape(Sortable.sequence('listAvailable'));
+	list = escape(Sortable.sequence('gs_listAvailable'));
 	sorted_ids = unescape(list).split(',');
 
 	listTakenLength=sorted_ids.length*elementHeight;
 	if (listTakenLength<=0) listTakenLength=elementHeight;
-	document.getElementById('listAvailable').style.height = (listTakenLength)+'px';
+	document.getElementById('gs_listAvailable').style.height = (listTakenLength)+'px';
 
 	}
 
@@ -1055,8 +1079,8 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	*/
 
 	function generalstats_moveElementUp(key) {
-		if (generalstats_moveElementUpforList('listTaken', key)==false)
-			generalstats_moveElementUpforList('listAvailable', key);
+		if (generalstats_moveElementUpforList('gs_listTaken', key)==false)
+			generalstats_moveElementUpforList('gs_listAvailable', key);
 
 		generalstats_updateDragandDropLists();
 	}
@@ -1066,8 +1090,8 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	*/
 
 	function generalstats_moveElementDown(key) {
-		if (generalstats_moveElementDownforList('listTaken', key)==false)
-			generalstats_moveElementDownforList('listAvailable', key);
+		if (generalstats_moveElementDownforList('gs_listTaken', key)==false)
+			generalstats_moveElementDownforList('gs_listAvailable', key);
 
 		generalstats_updateDragandDropLists();
 	}
@@ -1079,10 +1103,10 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	function generalstats_adoptDragandDropEdit (key) {
 		document.getElementById('generalstats_DragandDrop_Edit_Message').style.display='none';
 
-		for (var j = 0; j < keys.length; j++) {
-			if (keys[j]==key) {
-				document.getElementById('generalstats_DragandDrop_Edit_Label').value = fields[j];
-				document.getElementById('generalstats_DragandDrop_Edit_Text').value = document.getElementById(fieldPre+fields[j]+'_Description').value; 
+		for (var j = 0; j < generalstats_keys.length; j++) {
+			if (generalstats_keys[j]==key) {
+				document.getElementById('generalstats_DragandDrop_Edit_Label').value = generalstats_fields[j];
+				document.getElementById('generalstats_DragandDrop_Edit_Text').value = document.getElementById(generalstats_fieldPre+generalstats_fields[j]+'_Description').value; 
 				document.getElementById('generalstats_DragandDrop_Edit_Text').disabled=null;
 				document.getElementById('generalstats_DragandDrop_Edit_Text').focus();
 			}
@@ -1097,15 +1121,15 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 		var fieldName= document.getElementById('generalstats_DragandDrop_Edit_Label').value;
 
 		if (fieldName.length>0) {
-			document.getElementById( fieldPre + fieldName +'_Description').value = document.getElementById('generalstats_DragandDrop_Edit_Text').value;
+			document.getElementById( generalstats_fieldPre+ fieldName +'_Description').value = document.getElementById('generalstats_DragandDrop_Edit_Text').value;
 			new Effect.Highlight(document.getElementById('generalstats_DragandDrop'),{startcolor:'#30df8b'});
 			new Effect.Appear(document.getElementById('generalstats_DragandDrop_Edit_Message'));
 
 			//adopt drag and drop table
-			for (var j = 0; j < fields.length; j++) {
-				if (fields[j]==fieldName) {
-					document.getElementById('Tags_'+keys[j]).childNodes[2].nodeValue= document.getElementById('generalstats_DragandDrop_Edit_Text').value+' ('+fieldName+')';
-					new Effect.Highlight(document.getElementById('Tags_'+keys[j]),{startcolor:'#30df8b'});
+			for (var j = 0; j < generalstats_fields.length; j++) {
+				if (generalstats_fields[j]==fieldName) {
+					document.getElementById('Tags_'+generalstats_keys[j]).childNodes[2].nodeValue= document.getElementById('generalstats_DragandDrop_Edit_Text').value+' ('+fieldName+')';
+					new Effect.Highlight(document.getElementById('Tags_'+generalstats_keys[j]),{startcolor:'#30df8b'});
 				}
 			}
 
@@ -1149,8 +1173,11 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 
       Event.observe('generalstats_DragandDrop_Change', 'click', function(e){ generalstats_changeDragandDropEdit(); });
 
-      Event.observe('info_update_click', 'click', function(e){ document.getElementById('info_update').click(); });
-      Event.observe('load_default_click', 'click', function(e){ document.getElementById('load_default').click(); });
+	 for (var i=1;i<6;i++) {
+	       Event.observe('info_update_click'+i, 'click', function(e){ document.getElementById('info_update').click(); });
+       	 Event.observe('load_default_click'+i, 'click', function(e){ document.getElementById('load_default').click(); });
+		 new Effect.Appear(document.getElementById('generalstats_actionbuttons_'+i), {duration:0, from:1, to:1});
+	 }
 
       <?php echo($listTakenListeners); ?>
       <?php echo($listAvailableListeners); ?>

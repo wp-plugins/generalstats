@@ -5,11 +5,12 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.82
+Version: 0.90
 Author URI: http://www.neotrinity.at
 */
 
 /*  Copyright 2006-2009  Bernhard Riedl  (email : neo@neotrinity.at)
+    Inspirations & Proof-Reading by Veronika Grascher
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,11 +41,16 @@ called from init hook
 function generalstats_init() {
 	DEFINE ('GENERALSTATS_PLUGINURL', get_settings('siteurl'). '/'. str_replace( ABSPATH, '', dirname(__FILE__) . '/'));
 
+	add_action('admin_head', 'generalstats_wp_head');
 	add_action('wp_head', 'generalstats_wp_head');
 	add_action('admin_menu', 'addGeneralStatsOptionPage');
 
 	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
 }
+
+/*
+adds a settings link in the plugin-tab
+*/
 
 function generalstats_adminmenu_plugin_actions($links, $file) {
 	if ($file == 'generalstats/general-stats.php')
@@ -60,6 +66,7 @@ for the admin-page
 */
 
 function generalstats_admin_print_scripts() {
+	wp_enqueue_script('prototype');
 	wp_enqueue_script('scriptaculous-effects');
 	wp_enqueue_script('scriptaculous-dragdrop');
 }
@@ -176,7 +183,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.82\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"0.90\"/>");
 }
 
 /*
@@ -232,6 +239,11 @@ function GeneralStatsComplete() {
 	$cacheTime = get_option($fieldsPre.'Cache_Time');
 	$lastCacheTime = get_option($fieldsPre.'Last_Cache_Time');
 
+	//regex taken from php.net by mark at codedesigner dot nl
+	//if cacheTime is not or incorrect set
+	if (!preg_match('@^[-]?[0-9]+$@',$cacheTime) || $cacheTime<0)
+		$cacheTime=0;
+
 	$cacheAge = gmdate('U') - $lastCacheTime;
 
 	$cache = get_option($fieldsPre.'Cache');
@@ -275,8 +287,8 @@ function GeneralStatsCreateOutput() {
 
     $fieldsPre="GeneralStats_";
 
-    $before_list=stripslashes(get_option($fieldsPre.'before_List'));
-    $after_list=stripslashes(get_option($fieldsPre.'after_List'));
+    $before_list='<div class="generalstats-output">'.stripslashes(get_option($fieldsPre.'before_List'));
+    $after_list=stripslashes(get_option($fieldsPre.'after_List')).'</div>';
     $before_tag=stripslashes(get_option($fieldsPre.'before_Tag'));
     $after_tag=stripslashes(get_option($fieldsPre.'after_Tag'));
     $before_detail=stripslashes(get_option($fieldsPre.'before_Details'));
@@ -436,8 +448,9 @@ function GeneralStats_WordCount($statement, $attribute, $countAttribute) {
 	$counter = $counter[0];
 	$startLimit = 0;
 
+	//regex taken from php.net by mark at codedesigner dot nl
 	//if rows_at_Once is not or incorrect set
-	if ($rows_at_Once<1) {
+	if (!preg_match('@^[-]?[0-9]+$@',$rows_at_Once) || $rows_at_Once<1) {
 		$rows_at_Once=$counter;
 	}
 
@@ -570,7 +583,7 @@ function createGeneralStatsOptionPage() {
         }
 
         ?><div class="updated"><p><strong>
-        <?php _e('Configuration changed!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
+        <?php _e('Configuration changed and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?><?php _e('<br /><br />Have a look at <a href="#'.$fieldsPre.'Preview">the preview</a>!')?></strong></p></div>
 
       <?php }
 
@@ -598,7 +611,7 @@ function createGeneralStatsOptionPage() {
         }
 
         ?><div class="updated"><p><strong>
-        <?php _e('Defaults loaded!<br />Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
+        <?php _e('Defaults loaded and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
       <?php }
 
@@ -814,7 +827,12 @@ In this section you can customize the layout of <a href="#<?php echo($fieldsPre)
         <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></td>
             <td><input type="text" size="2" maxlength="4" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
       </tr>
-    </table>
+    </table><br /><br />
+
+Moreover you can add style attributes for the container <code>div</code>-element by modifying the class <code>generalstats-output</code> in your <a href="themes.php">Theme</a>, e.g. with the WordPress <a href="theme-editor.php">Theme-Editor</a>.<br /><br />
+
+<strong>Syntax</strong><br /><br />
+<code>.generalstats-output { yourstyle }</code>
 
 <?php GeneralStatsOptionPageActionButtons(4); ?>
 
@@ -834,7 +852,7 @@ These are the expert settings of GeneralStats. Please consult the <a target="_bl
 
      <tr>
         <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></td>
-            <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,1,10000,'','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
       </tr>
     </table>
 
@@ -845,7 +863,7 @@ These are the expert settings of GeneralStats. Please consult the <a target="_bl
     <a name="<?php echo($fieldsPre); ?>Preview"></a><h2>Preview</h2>
 
 You can publish this output either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.<br /><br />
-    <?php GeneralStatsComplete(); ?>
+    <?php if (!isset($_GET['cleanup'])) GeneralStatsComplete(); ?>
 
     <div class="submit">
       <input type="submit" name="info_update" id="info_update" value="<?php _e('Update options') ?>" />
@@ -881,6 +899,7 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 		var numberfield = objName;
 
 		if (generalstats_chkNumeric(objName,minval,maxval,comma,period,hyphen,message) == false) {
+			objName.value='';
 			return false;
 		}
 
@@ -1209,6 +1228,8 @@ function generalstats_uninstall() {
 
 	$csstags=array("before_List", "after_List", "before_Tag", "after_Tag", "before_Details", "after_Details");
 $sections=array('Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Administrative_Options_Section' => '0');
+
+	$sections=array('Instructions_Section' => '1', 'Static_Tags_Section' => '1', 'CSS_Tags_Section' => '1', 'Administrative_Options_Section' => '1');
 
 	delete_option($fieldsPre.'Cache');
 	delete_option($fieldsPre.'Force_Cache_Refresh');

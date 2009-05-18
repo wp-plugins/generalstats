@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 0.90
+Version: 1.00
 Author URI: http://www.neotrinity.at
 */
 
@@ -39,13 +39,174 @@ called from init hook
 */
 
 function generalstats_init() {
-	DEFINE ('GENERALSTATS_PLUGINURL', get_settings('siteurl'). '/'. str_replace( ABSPATH, '', dirname(__FILE__) . '/'));
 
-	add_action('admin_head', 'generalstats_wp_head');
-	add_action('wp_head', 'generalstats_wp_head');
-	add_action('admin_menu', 'addGeneralStatsOptionPage');
+	/*
+	Pre-2.6 compatibility
+	inspired by http://planetozh.com/blog/2008/07/what-plugin-coders-must-know-about-wordpress-26/
+	*/
 
-	add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
+	if (!defined('WP_CONTENT_URL'))
+		define('WP_CONTENT_URL', get_option('siteurl') . '/wp-content');
+	if (!defined('WP_PLUGIN_URL'))
+		define('WP_PLUGIN_URL', WP_CONTENT_URL . '/plugins');
+
+	if (!defined('WP_CONTENT_DIR'))
+		define('WP_CONTENT_DIR', ABSPATH . 'wp-content');
+
+	if (!defined('WP_PLUGIN_DIR'))
+		define('WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins');
+
+	/*
+	GeneralStats Constant
+	*/
+
+	if (function_exists('plugins_url'))
+		DEFINE ('GENERALSTATS_PLUGINURL', plugins_url(plugin_basename(dirname(__FILE__))) . '/');
+	else
+		DEFINE ('GENERALSTATS_PLUGINURL', WP_PLUGIN_URL . '/'. plugin_basename(dirname(__FILE__)) . '/');
+
+	/* check for ajax-refresh-call */
+
+	if (isset($_POST['generalstats-refresh'])) {
+		GeneralStatsComplete();
+		exit;
+	}
+
+	if (get_option('GeneralStats_Use_Ajax_Refresh')=='1') {
+		wp_enqueue_script('prototype');
+	}
+
+}
+
+/*
+add hooks for forcing a cache refresh;
+unfortunately the list on http://codex.wordpress.org/Plugin_API/Action_Reference
+is not complete, so i walked through the source of
+wp 2.3 and 2.8 to find the appropriate triggers
+*/
+
+function generalstats_add_refresh_hooks() {
+
+	/*
+	users
+	*/
+
+	add_action('user_register', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	as deleted_user does not exist
+	until wp 2.8, we alternatively include delete_user
+	*/
+
+	global $wp_version;
+
+	if (version_compare($wp_version, "2.8", "<"))
+		add_action('delete_user', 'GeneralStatsForceCacheRefresh');
+	else
+		add_action('deleted_user', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	posts & pages
+	*/
+
+	add_action('save_post', 'GeneralStatsSavePostForceCacheRefresh', 10, 2);
+	add_action('deleted_post', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	comments
+	*/
+
+	add_action('comment_post', 'GeneralStatsCommentStatusForceCacheRefresh', 10, 2);
+	add_action('edit_comment', 'GeneralStatsForceCacheRefresh');
+
+	/* deleted_comment can be realized by
+	using wp_set_comment_status
+	*/
+
+	add_action('wp_set_comment_status', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	links
+	*/
+
+	add_action('add_link', 'GeneralStatsForceCacheRefresh'); 
+	add_action('edit_link', 'GeneralStatsForceCacheRefresh');
+	add_action('deleted_link', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	terms (tags, categories & link-categories)
+	*/
+
+	add_action('created_term', 'GeneralStatsForceCacheRefresh');
+	add_action('edited_term', 'GeneralStatsForceCacheRefresh');
+	add_action('delete_term', 'GeneralStatsForceCacheRefresh');
+
+	/*
+	SABRE CORPORATION
+	http://wordpress.org/extend/plugins/sabre/
+	*/
+
+	if (defined('SABRE_TABLE')) {
+	}
+
+}
+
+/*
+adds the javascript code for re-occuring stats-updates
+*/
+
+function generalstats_ajax_refresh() {
+
+	$fieldsPre="GeneralStats_";
+	if(get_option($fieldsPre.'Use_Ajax_Refresh')=='1') { 
+			$refreshTime = get_option($fieldsPre.'Refresh_Time');
+
+			//regex taken from php.net by mark at codedesigner dot nl
+			if (!preg_match('@^[-]?[0-9]+$@',$refreshTime) || $refreshTime<1)
+				$refreshTime=30;
+	?>
+
+<script type="text/javascript" language="javascript">
+
+	/* <![CDATA[ */
+
+	/*
+	Generalstats AJAX Refresh
+	*/
+
+	var generalstats_divclassname='generalstats-output';
+
+	function generalstats_refresh() {
+		var params = 'generalstats-refresh=1';
+		new Ajax.Request(
+			'<?php echo(get_settings('home'). '/'); ?>',
+			{
+				method: 'post',
+				parameters: params,
+				onSuccess: generalstats_handleReply
+			});
+	}
+
+	function generalstats_handleReply(response) {
+		if (200 == response.status){
+			var resultText=response.responseText;
+
+			if (resultText.indexOf('<div class="'+generalstats_divclassname+'"')>-1) {
+				var generalstats_blocks=$$('div.'+generalstats_divclassname);
+				for (var i=0;i<generalstats_blocks.length;i++) {
+					Element.replace(generalstats_blocks[i], resultText);
+				}
+			}
+		}
+	}
+
+	Event.observe(window, 'load', function(e){ if ($$('div.'+generalstats_divclassname).length>0) new PeriodicalExecuter(generalstats_refresh, <?php echo($refreshTime); ?>); });
+
+	/* ]]> */
+
+</script>
+
+	<?php }
 }
 
 /*
@@ -53,8 +214,8 @@ adds a settings link in the plugin-tab
 */
 
 function generalstats_adminmenu_plugin_actions($links, $file) {
-	if ($file == 'generalstats/general-stats.php')
-		$links[] = "<a href='options-general.php?page=generalstats/general-stats.php'>Settings</a>";
+	if ($file == 'generalstats/generalstats.php')
+		$links[] = "<a href='options-general.php?page=".plugin_basename(__FILE__)."'>" . __('Settings') . "</a>";
 
 	return $links;
 }
@@ -72,41 +233,61 @@ function generalstats_admin_print_scripts() {
 }
 
 /*
+process the admin_color-array
+*/
+
+function generalstats_get_admin_colors() {
+	global $wp_version;
+
+	/*
+	WP 2.3 colors
+	*/
+
+	$processed_admin_colors=array("#14568A", "#14568A", "", "#C3DEF1");
+
+	if (version_compare($wp_version, "2.5", ">=")) {
+
+		/*
+		default colors for >= WP 2.5 (fresh)
+		*/
+
+		$processed_admin_colors=array("#464646", "#6D6D6D", "#F1F1F1", "#DFDFDF");
+
+		$current_color = get_user_option('admin_color');
+		if (strlen($current_color)<1)
+			return $processed_admin_colors;
+
+		$available_admin_colors=array("classic" => array("#073447", "#21759B", "#EAF3FA", "#BBD8E7") );
+
+		/*
+		include user-defined color schemes
+		*/
+
+		global $generalstats_available_admin_colors;
+
+		if (!empty($generalstats_available_admin_colors) && is_array($generalstats_available_admin_colors))
+			foreach($generalstats_available_admin_colors as $key => $available_admin_color)
+				if (is_array($available_admin_color) && sizeof($available_admin_color)==4)
+					$available_admin_colors=array_merge($available_admin_colors, array($key => $generalstats_available_admin_colors[$key]));
+
+		if (!array_key_exists($current_color, $available_admin_colors))
+			return $processed_admin_colors;
+		else
+			return $available_admin_colors[$current_color];
+
+	}
+
+	return $processed_admin_colors;
+}
+
+/*
 loads the necessary css-styles
 for the admin-page
 */
 
 function generalstats_admin_head() {
 
-?>
-
-<?php
-	global $wp_version;
-
-	$current_wp_admin_css_colors=array();
-
-	/*
-	check if wordpress_admin_themes are available
-	*/
-
-	if (version_compare($wp_version, "2.5", ">=")) {
-		global $_wp_admin_css_colors;
-
-		$current_color = get_user_option('admin_color');
-		if ( empty($current_color) )
-			$current_color = 'fresh';
-
-		$current_wp_admin_css_colors=$_wp_admin_css_colors[$current_color]->colors;
-
-	}
-
-	/*
-	if themes are not available, use default colors
-	*/
-
-	if (sizeof($current_wp_admin_css_colors)<4) {
-		$current_wp_admin_css_colors=array("#14568a", "#14568a", "", "#c3def1");
-	}
+	$generalstats_admin_css_colors=generalstats_get_admin_colors();
 ?>
 
      <style type="text/css">
@@ -117,15 +298,15 @@ function generalstats_admin_head() {
 	}
 
       li.generalstats_sortablelist {
-		background-color: <?php echo $current_wp_admin_css_colors[1]; ?>;
-		color: <?php echo $current_wp_admin_css_colors[3]; ?>;
+		background-color: <?php echo $generalstats_admin_css_colors[1]; ?>;
+		color: <?php echo $generalstats_admin_css_colors[3]; ?>;
 		cursor : move;
 		padding: 3px 5px 3px 5px;
       }
 
       ul.generalstats_sortablelist {
 		float: left;
-		border: 1px <?php echo $current_wp_admin_css_colors[0]; ?> solid;
+		border: 1px <?php echo $generalstats_admin_css_colors[0]; ?> solid;
 		list-style-image : none;
 		list-style-type : none;
 		margin: 10px 20px 20px 0px;
@@ -142,12 +323,8 @@ function generalstats_admin_head() {
       }
 
 	#generalstats_DragandDrop_Edit_Label {
-		background-color: <?php echo $current_wp_admin_css_colors[1]; ?>;
-		color: <?php echo $current_wp_admin_css_colors[3]; ?>;
-	}
-
-	#generalstats_DragandDrop_Edit_Message {
-		color: <?php echo $current_wp_admin_css_colors[0]; ?>;
+		background-color: <?php echo $generalstats_admin_css_colors[1]; ?>;
+		color: <?php echo $generalstats_admin_css_colors[3]; ?>;
 	}
 
 	img.generalstats_arrowbutton {
@@ -167,15 +344,44 @@ function generalstats_admin_head() {
 }
 
 /*
+add dashboard widget
+*/
+
+function generalstats_add_dashboard_widget() {
+	if (function_exists('wp_add_dashboard_widget'))
+		wp_add_dashboard_widget('generalstats_dashboard_widget', 'GeneralStats', 'GeneralStatsComplete');
+} 
+
+/*
 called from widget_init hook
 */
 
 function widget_generalstats_init() {
-	$plugin_name="GeneralStats";
-	$widgets="widgets";
 
-	register_sidebar_widget(array($plugin_name, $widgets), 'widget_generalstats');
-	register_widget_control(array($plugin_name, $widgets), 'widget_generalstats_control', 300, 100);
+	/*
+	WP >= 2.8
+	*/
+
+	if(in_array('WP_Widget', get_declared_classes())) {
+		$widgetFile=WP_PLUGIN_DIR.'/'.plugin_basename(dirname(__FILE__)).'/generalstats_widget.php';
+
+		if (file_exists($widgetFile)) {
+			include($widgetFile);
+			register_widget('WP_Widget_GeneralStats');
+		}
+	}
+
+	/*
+	WP < 2.8
+	*/
+
+	else {
+		$plugin_name="GeneralStats";
+		$widgets="widgets";
+
+		register_sidebar_widget(array($plugin_name, $widgets), 'widget_generalstats');
+		register_widget_control(array($plugin_name, $widgets), 'widget_generalstats_control', 300, 100);
+	}
 }
 
 /*
@@ -183,7 +389,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"0.90\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.00\"/>");
 }
 
 /*
@@ -223,9 +429,9 @@ function widget_generalstats_control() {
 
 		$title = htmlspecialchars($options['title'], ENT_QUOTES);
 		
-		echo '<p style="text-align:right;"><label for="'.$generalstats_title.'">' . __('Title:') . ' <input style="width: 200px;" id="'.$generalstats_title.'" name="'.$generalstats_title.'" type="text" value="'.$title.'" /></label></p>';
+		echo '<p>' . __('Title:') . ' <input id="'.$generalstats_title.'" name="'.$generalstats_title.'" type="text" value="'.$title.'" /></p>';
 		echo '<input type="hidden" id="'.$generalstats_submit.'" name="'.$generalstats_submit.'" value="1" />';
-		echo '<p style="text-align:left;"><label for="generalstats-options">Find the options <a href="options-general.php?page=generalstats/general-stats.php">here</a>!</label></p>';
+		echo '<p><a href="options-general.php?page='.plugin_basename(__FILE__).'">' . __('Settings') . '</a></p>';
 	}
 
 /*
@@ -266,10 +472,37 @@ function GeneralStatsComplete() {
 }
 
 /*
+check comment-status before force cache refresh
+*/
+
+function GeneralStatsCommentStatusForceCacheRefresh($id=-1, $status=false) {
+	if ($status==1 || $status===false)
+		GeneralStatsForceCacheRefresh();
+}
+
+/*
+check post-status and visibility before force cache refresh
+*/
+
+function GeneralStatsSavePostForceCacheRefresh($id=-1, $post=false) {
+	$autosave=false;
+	if (function_exists('wp_is_post_autosave'))
+		if ($post && is_object($post) && wp_is_post_autosave($post)>0)
+			$autosave=true;
+
+	$post_status='publish';
+	if ($post && is_object($post) )
+		$post_status=$post->post_status;
+
+	if ($autosave===false && $post_status=='publish')
+		GeneralStatsForceCacheRefresh();
+}
+
+/*
 force cache refresh
 */
 
-function GeneralStatsForceCacheRefresh() {
+function GeneralStatsForceCacheRefresh($arg1='', $arg2='', $arg3='') {
 	update_option('GeneralStats_Force_Cache_Refresh', '1'); 
 }
 
@@ -323,18 +556,25 @@ function GeneralStatsCreateOutput() {
 
     $ret.=($before_list);
 
-    /*
-    loop through desired stats
-    */
+    if (sizeof($orders)>0) {
 
-    foreach($orders as $key => $order) {
-	if (array_key_exists($key, $fields)) {
-   	    $count=GeneralStatsCounter($key);
-	    $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description);
+	    /*
+	    loop through desired stats
+	    */
 
-          $count=number_format($count,'0','',get_option($fieldsPre.'Thousand_Delimiter'));
-          $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
-	}
+	    foreach($orders as $key => $order) {
+		if (array_key_exists($key, $fields)) {
+	   	    $count=GeneralStatsCounter($key);
+		    $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description);
+
+	          $count=number_format($count,'0','',get_option($fieldsPre.'Thousand_Delimiter'));
+	          $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
+		}
+	    }
+    }
+
+    else {
+	    $ret.=$before_tag.'No stats to display yet...'.$after_tag;
     }
 
     /*
@@ -520,8 +760,8 @@ Output JS
 
 function GeneralStatsOptionPageActionButtons($num) { ?>
 	    <div id="generalstats_actionbuttons_<?php echo($num); ?>" class="submit" style="display:none">
-      	<input type="button" id="info_update_click<?php echo($num); ?>" name="info_update_click<?php echo($num); ?>" value="<?php _e('Update options') ?>" />
-	      <input type="button" id="load_default_click<?php echo($num); ?>" name="load_default_click<?php echo($num); ?>" value="<?php _e('Load defaults') ?>" />
+      	<input type="button" id="info_update_click<?php echo($num); ?>" name="info_update_click<?php echo($num); ?>" value="<?php echo('Update options') ?>" />
+	      <input type="button" id="load_default_click<?php echo($num); ?>" name="load_default_click<?php echo($num); ?>" value="<?php echo('Load defaults') ?>" />
 	    </div>
 <?php }
 
@@ -546,6 +786,11 @@ function createGeneralStatsOptionPage() {
 
     $csstags=array("before_List", "after_List", "before_Tag", "after_Tag", "before_Details", "after_Details");
     $available_Fields=array_keys($fields);
+
+    $Use_Ajax_Refresh="Use_Ajax_Refresh";
+    $Refresh_Time="Refresh_Time";
+
+    $Use_Action_Hooks="Use_Action_Hooks";
 
     $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
 	5 => "", 10 => "", 11 => "", 12 => "");
@@ -575,6 +820,22 @@ function createGeneralStatsOptionPage() {
 
         update_option($fieldsPre.$Thousand_Delimiter, $_POST[$fieldsPre.$Thousand_Delimiter]);
 
+	  if (isset($_POST[$fieldsPre.$Use_Action_Hooks])) {
+	    update_option($fieldsPre.$Use_Action_Hooks, '1');
+	  }
+	  else {
+	    update_option($fieldsPre.$Use_Action_Hooks, '0');
+	  }
+
+	  if (isset($_POST[$fieldsPre.$Use_Ajax_Refresh])) {
+	    update_option($fieldsPre.$Use_Ajax_Refresh, '1');
+	    update_option($fieldsPre.$Refresh_Time, $_POST[$fieldsPre.$Refresh_Time]);
+	  }
+	  else {
+	    update_option($fieldsPre.$Use_Ajax_Refresh, '0');
+	    update_option($fieldsPre.$Refresh_Time, '');
+	  }
+
 	  update_option($fieldsPre.$Cache_Time, $_POST[$fieldsPre.$Cache_Time]);
         update_option($fieldsPre.$Rows_at_Once, $_POST[$fieldsPre.$Rows_at_Once]);
 
@@ -583,7 +844,7 @@ function createGeneralStatsOptionPage() {
         }
 
         ?><div class="updated"><p><strong>
-        <?php _e('Configuration changed and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?><?php _e('<br /><br />Have a look at <a href="#'.$fieldsPre.'Preview">the preview</a>!')?></strong></p></div>
+        <?php echo('Configuration changed and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?><?php echo('<br /><br />Have a look at <a href="#'.$fieldsPre.'Preview">the preview</a>!')?></strong></p></div>
 
       <?php }
 
@@ -603,7 +864,12 @@ function createGeneralStatsOptionPage() {
 
 	  update_option($fieldsPre.$Thousand_Delimiter, ',');
 
-	  update_option($fieldsPre.$Cache_Time, '600');
+        update_option($fieldsPre.$Use_Ajax_Refresh, '0');
+        update_option($fieldsPre.$Refresh_Time, '');
+
+        update_option($fieldsPre.$Use_Action_Hooks, '1');
+
+ 	  update_option($fieldsPre.$Cache_Time, '600');
 	  update_option($fieldsPre.$Rows_at_Once, '100');
 
         foreach ($sections as $key => $section) {
@@ -611,7 +877,7 @@ function createGeneralStatsOptionPage() {
         }
 
         ?><div class="updated"><p><strong>
-        <?php _e('Defaults loaded and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
+        <?php echo('Defaults loaded and Cache refreshed!')?><?php GeneralStatsForceCacheRefresh(); ?></strong></p></div>
 
       <?php }
 
@@ -620,9 +886,11 @@ function createGeneralStatsOptionPage() {
 	  generalstats_uninstall();
 
         ?><div class="updated"><p><strong>
-        <?php _e('Settings deleted!')?></strong></p></div>
+        <?php echo('Settings deleted!')?></strong></p></div>
 
       <?php }
+
+    global $wp_version;
 
     foreach($sections as $key => $section) {
 	if (get_option($fieldsPre.$key)!="") $sections[$key] = get_option($fieldsPre.$key);
@@ -714,12 +982,13 @@ function createGeneralStatsOptionPage() {
 
 Hint: All parameters of GeneralStats can also be changed without the usage of Javascript in the <a href="#<?php echo($fieldsPre); ?>Static_Tags">Static Tags Section</a>.
 </li>
-        <li>Style-customizations can be made in the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags Section</a>. The <a href="#<?php echo($fieldsPre); ?>Administrative_Options">Administrative Options Section</a> reflects further settings for experts. (Defaults for both sections are automatically populated via the <strong>Load defaults</strong> button)</li>
+        <li>Style-customizations can be made in the <a href="#<?php echo($fieldsPre); ?>CSS_Tags">CSS-Tags Section</a>. (Defaults are automatically populated via the <strong>Load defaults</strong> button)</li>
+	  <li>You can activate an optional Ajax refresh for automatical updates of your stats-output in the <a href="#<?php echo($fieldsPre); ?>Administrative_Options">Administrative Options Section</a>. In this section you can also find the caching and performance options of GeneralStats.</li>
         <li>Before you publish the results you can use the <a href="#<?php echo($fieldsPre); ?>Preview">Preview Section</a>.</li>
-        <li>Finally, you can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.</li>
+        <li>Finally, you can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.<?php if (version_compare($wp_version, "2.7", ">=")) { ?> Moreover you can also display your current stats-selection as <a href="index.php">Dashboard Widget</a>.<?php } ?></li>
     <?php
 	if (!function_exists('register_uninstall_hook')) { ?>
-        <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly <a href="?page=generalstats/general-stats.php&amp;cleanup=true" onclick="javascript:return confirm('Are you sure you want to delete all your settings?')">click here</a> to clean up the database. Then disable it in the <a href="plugins.php">Plugins Tab</a> and delete the <code>generalstats</code> directory in your WordPress Plugins directory (usually wp-content/plugins) on your webserver.</li>
+        <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly <a href="?page=<?php echo(plugin_basename(__FILE__)); ?>&amp;cleanup=true" onclick="javascript:return confirm('Are you sure you want to delete all your settings?')">click here</a> to clean up the database. Then disable it in the <a href="plugins.php">Plugins Tab</a> and delete the <code>generalstats</code> directory in your WordPress Plugins directory (usually wp-content/plugins) on your webserver.</li>
     <?php }
 	else { ?>
         <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly disable and delete it in the <a href="plugins.php">Plugins Tab</a>.</li>
@@ -771,7 +1040,7 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
 
 <?php GeneralStatsOptionPageActionButtons(2); ?>
 
-       <form action="options-general.php?page=generalstats/general-stats.php" method="post">
+       <form action="options-general.php?page=<?php echo(plugin_basename(__FILE__)); ?>" method="post">
 
           <a name="<?php echo($fieldsPre); ?>Static_Tags"></a><h2><?php generalstats_open_close_section($fieldsPre.'Static_Tags_Section', $sections['Static_Tags_Section']); ?>Static Tags</h2>
 
@@ -785,7 +1054,7 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
      foreach ($fields as $field) {
           echo("<tr>");
             echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
-            _e($field);
+            echo($field);
             echo("</label></td>");
               echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" maxlength=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
               echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" maxlength=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" /></td>");
@@ -815,7 +1084,7 @@ In this section you can customize the layout of <a href="#<?php echo($fieldsPre)
      foreach ($csstags as $csstag) {
           echo("<tr>");
             echo("<td><label for=\"".$fieldsPre.$csstag."\">");
-            _e($csstag);
+            echo($csstag);
             echo("</label></td>");
               echo("<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" /></td>");
           echo("</tr>");
@@ -824,7 +1093,7 @@ In this section you can customize the layout of <a href="#<?php echo($fieldsPre)
      ?>
 
      <tr>
-        <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php _e($Thousand_Delimiter) ?></label></td>
+        <td><label for="<?php echo($fieldsPre.$Thousand_Delimiter); ?>"><?php echo($Thousand_Delimiter) ?></label></td>
             <td><input type="text" size="2" maxlength="4" name="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" id="<?php echo($fieldsPre.$Thousand_Delimiter); ?>" value="<?php echo get_option($fieldsPre.$Thousand_Delimiter); ?>" /></td>
       </tr>
     </table><br /><br />
@@ -842,16 +1111,41 @@ Moreover you can add style attributes for the container <code>div</code>-element
 
 	<div id="<?php echo($fieldsPre); ?>Administrative_Options_Section" <?php if ($sections['Administrative_Options_Section']==='0') { ?>style="display:none"<?php } ?>>
 
-These are the expert settings of GeneralStats. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/generalstats/faq/">FAQ</a> for further information.
+In this section you can enable and customize the Ajax-Refresh of GeneralStats. After activating Use_Ajax_Refresh you can specify the seconds for the update interval.<br /><br />
+
+As all stats are retrieved from the server on every refresh, a Refresh_Time of one second is mostly not realizable for the average server out there. Moreover, please remember that every update causes bandwith usage for your readers and your host.
+    <table class="form-table">
+     <tr>
+        <td><label for ="<?php echo($fieldsPre.$Use_Ajax_Refresh); ?>"><?php echo($Use_Ajax_Refresh.'') ?></label></td>
+            <td><input type="checkbox" onclick="generalstats_toggleAjaxRefreshFields(this, '<?php echo($Refresh_Time); ?>');" name="<?php echo($fieldsPre.$Use_Ajax_Refresh); ?>" id="<?php echo($fieldsPre.$Use_Ajax_Refresh); ?>" <?php if(get_option($fieldsPre.$Use_Ajax_Refresh)==1) echo('checked="checked"'); ?> /></td>
+      </tr>
+
+     <tr>
+        <td><label for="<?php echo($fieldsPre.$Refresh_Time); ?>"><?php echo($Refresh_Time.' (in seconds)') ?></label></td>
+            <td><input type="text" onblur="generalstats_checkNumeric(this,1,3600,'','','',true);" size="8" maxlength="8" name="<?php echo($fieldsPre.$Refresh_Time); ?>" <?php if(get_option($fieldsPre.$Use_Ajax_Refresh)!=1) echo('disabled="disabled"'); ?> id="<?php echo($fieldsPre.$Refresh_Time); ?>" value="<?php echo get_option($fieldsPre.$Refresh_Time); ?>" /></td>
+      </tr>
+    </table><br /><br />
+
+With the following options you can influence the caching behaviour of GeneralStats. If you activate Use_Action_Hooks, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer caching time.
 
     <table class="form-table">
      <tr>
-        <td><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php _e($Cache_Time.' (in seconds)') ?></label></td>
+        <td><label for="<?php echo($fieldsPre.$Cache_Time); ?>"><?php echo($Cache_Time.' (in seconds)') ?></label></td>
             <td><input type="text" onblur="generalstats_checkNumeric(this,'','','','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Cache_Time); ?>" id="<?php echo($fieldsPre.$Cache_Time); ?>" value="<?php echo get_option($fieldsPre.$Cache_Time); ?>" /></td>
       </tr>
 
      <tr>
-        <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php _e($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performing)') ?></label></td>
+        <td><label for ="<?php echo($fieldsPre.$Use_Action_Hooks); ?>"><?php echo($Use_Action_Hooks.'') ?></label></td>
+            <td><input type="checkbox" name="<?php echo($fieldsPre.$Use_Action_Hooks); ?>" id="<?php echo($fieldsPre.$Use_Action_Hooks); ?>" <?php if(get_option($fieldsPre.$Use_Action_Hooks)==1) echo('checked="checked"'); ?> /></td>
+      </tr>
+    </table><br /><br />
+
+Rows_at_Once is a performance-related expert setting of GeneralStats. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/generalstats/faq/">FAQ</a> for further information.
+
+    <table class="form-table">
+
+     <tr>
+        <td><label for ="<?php echo($fieldsPre.$Rows_at_Once); ?>"><?php echo($Rows_at_Once.' (this option effects the Words_in_* attributes: higher value = increased memory usage, but better performance)') ?></label></td>
             <td><input type="text" onblur="generalstats_checkNumeric(this,1,10000,'','','',true);" size="2" maxlength="5" name="<?php echo($fieldsPre.$Rows_at_Once); ?>" id="<?php echo($fieldsPre.$Rows_at_Once); ?>" value="<?php echo get_option($fieldsPre.$Rows_at_Once); ?>" /></td>
       </tr>
     </table>
@@ -866,8 +1160,8 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
     <?php if (!isset($_GET['cleanup'])) GeneralStatsComplete(); ?>
 
     <div class="submit">
-      <input type="submit" name="info_update" id="info_update" value="<?php _e('Update options') ?>" />
-      <input type="submit" name="load_default" id="load_default" value="<?php _e('Load defaults') ?>" />
+      <input type="submit" name="info_update" id="info_update" value="<?php echo('Update options') ?>" />
+      <input type="submit" name="load_default" id="load_default" value="<?php echo('Load defaults') ?>" />
     </div>
 
     <?php
@@ -1161,6 +1455,24 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 	}
 
 	/*
+	enables/disables the associated fields of a checkbox input
+	*/
+
+	function generalstats_toggleAjaxRefreshFields(element, field) {
+		var generalstats_newentry="GeneralStats_";
+		var isChecked=element.checked;
+
+		if (isChecked) {
+			document.getElementById(generalstats_newentry+field).value='30';
+			document.getElementById(generalstats_newentry+field).disabled=null;
+		}
+		else {
+			document.getElementById(generalstats_newentry+field).value='';
+			document.getElementById(generalstats_newentry+field).disabled='disabled';
+		}
+	}
+
+	/*
 	toggles a div together with an image
 	inspired by pnomolos
 	http://godbit.com/forum/viewtopic.php?id=1111
@@ -1210,6 +1522,21 @@ You can publish this output either by adding a <a href="widgets.php">Sidebar Wid
 add_action('init', 'generalstats_init');
 add_action('widgets_init', 'widget_generalstats_init');
 
+add_action('wp_head', 'generalstats_ajax_refresh');
+add_action('wp_head', 'generalstats_wp_head');
+
+add_action('admin_head', 'generalstats_ajax_refresh');
+add_action('admin_head', 'generalstats_wp_head');
+add_action('admin_menu', 'addGeneralStatsOptionPage');
+
+if (get_option('GeneralStats_Use_Action_Hooks')=='1') {
+	generalstats_add_refresh_hooks();
+}
+
+add_action('wp_dashboard_setup', 'generalstats_add_dashboard_widget' );
+
+add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
+
 if ( function_exists('register_uninstall_hook') )
 	register_uninstall_hook( __FILE__, 'generalstats_uninstall' );
 
@@ -1246,8 +1573,13 @@ $sections=array('Static_Tags_Section' => '0', 'CSS_Tags_Section' => '0', 'Admini
 
 	delete_option($fieldsPre."Thousand_Delimiter");
 
+	delete_option($fieldsPre.'Use_Action_Hooks');
+
 	delete_option($fieldsPre."Cache_Time");
 	delete_option($fieldsPre."Rows_at_Once");
+
+	delete_option($fieldsPre.'Use_Ajax_Refresh');
+	delete_option($fieldsPre.'Refresh_Time');
 
 	foreach ($sections as $key => $section) {
 		delete_option($fieldsPre.$key);

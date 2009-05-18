@@ -1,7 +1,7 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=neo%40neotrinity%2eat&item_name=neotrinity%2eat&no_shipping=1&no_note=1&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
-Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, sidebar
+Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, ajax, javascript, prototype
 Requires at least: 2.3
 Tested up to: 2.8
 Stable tag: trunk
@@ -12,8 +12,10 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 
 Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
+**since version 1.00 with an optional AJAX refresh and standard triggers for cache-refreshing**
+
 * fully optionpage-configurable
-* easy to integrate (ships with widget functionality)
+* easy to integrate (ships with sidebar- and dashboard-widget functionality)
 * high performing with caching technology and customizable memory usage
 * drag and drop admin menu page
 * clean uninstall
@@ -50,6 +52,20 @@ Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should
 = Why is the 'Drag and Drop Layout' not working? =
 
 This section is based on internal WordPress Javascript-libraries, which means that it is only working with WordPress 2.1 or higher. In addition you have to have Javascript enabled in your browser (this is a default setting in a common browser like Firefox). The plugin is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
+
+= How can I adopt the color scheme in the GeneralStats Settings Tab for WordPress 2.5 and higher? =
+
+If you select one of the two default color schemes (`Blue = classic` or `Gray = fresh`) in your Profile Page, GeneralStats automatically adopts its colors to this scheme.
+
+In case you use a custom color scheme, this cannot be done automatically, because WordPress still doesn't provide any proper functions to find out, which colors of your scheme are used for background, font, etc. - Nevertheless, you can set up your preferred colors manually: Just add the [global](http://php.net/manual/en/language.variables.scope.php) variable `$generalstats_available_admin_colors` in either generalstats.php or in your custom-colors-plugin.
+
+Array-Structure:
+
+* 1 -> border-color of drag and drop lists
+* 2 -> background-color of drag and drop menu items and edit-label
+* 4 -> text-color of drag and drop menu items and edit-label
+
+Example: `$generalstats_available_admin_colors = array("custom_scheme" => array("#14568A", "#14568A", "", "#C3DEF1"));`
 
 == Screenshots ==
 

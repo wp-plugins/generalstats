@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 1.00
+Version: 1.01
 Author URI: http://www.neotrinity.at
 */
 
@@ -389,7 +389,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"1.00\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.01\"/>");
 }
 
 /*
@@ -1525,7 +1525,7 @@ add_action('widgets_init', 'widget_generalstats_init');
 add_action('wp_head', 'generalstats_ajax_refresh');
 add_action('wp_head', 'generalstats_wp_head');
 
-add_action('admin_head', 'generalstats_ajax_refresh');
+add_action('admin_footer', 'generalstats_ajax_refresh');
 add_action('admin_head', 'generalstats_wp_head');
 add_action('admin_menu', 'addGeneralStatsOptionPage');
 

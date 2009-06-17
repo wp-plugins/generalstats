@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 1.02
+Version: 1.03
 Author URI: http://www.neotrinity.at
 */
 
@@ -179,7 +179,7 @@ function generalstats_ajax_refresh() {
 	function generalstats_refresh() {
 		var params = 'generalstats-refresh=1';
 		new Ajax.Request(
-			'<?php echo(get_settings('home'). '/'); ?>',
+			'<?php echo(get_option('home'). '/'); ?>',
 			{
 				method: 'post',
 				parameters: params,
@@ -384,11 +384,13 @@ called from widget_init hook
 
 function widget_generalstats_init() {
 
+	global $wp_version;
+
 	/*
 	WP >= 2.8
 	*/
 
-	if(in_array('WP_Widget', get_declared_classes())) {
+	if(version_compare($wp_version, "2.8", ">=")) {
 		$widgetFile=WP_PLUGIN_DIR.'/'.plugin_basename(dirname(__FILE__)).'/generalstats_widget.php';
 
 		if (file_exists($widgetFile)) {
@@ -415,7 +417,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"1.02\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.03\"/>");
 }
 
 /*
@@ -794,6 +796,8 @@ function generalstats_get_section_link($section, $allSections, $section_nicename
 
 	$fieldsPre="GeneralStats_";
 	$sectionPost='_Section';
+
+	$menuitem_onclick='';
 
 	if (strlen($section_nicename)<1)
 		$section_nicename=str_replace('_', ' ', $section);

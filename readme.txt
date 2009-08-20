@@ -16,6 +16,7 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 
 * fully optionpage-configurable
 * easy to integrate (ships with sidebar- and dashboard-widget functionality)
+* possible to integrate in "Right Now" box on the dashboard
 * high performing with caching technology and customizable memory usage
 * drag and drop admin menu page
 * clean uninstall

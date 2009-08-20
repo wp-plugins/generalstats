@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 1.03
+Version: 1.04
 Author URI: http://www.neotrinity.at
 */
 
@@ -370,13 +370,45 @@ function generalstats_admin_head() {
 }
 
 /*
+adds some css to format generalstats on the dashboard
+*/
+
+function generalstats_add_dashboard_widget_css() {
+
+?>
+
+	<style type="text/css">
+
+	.generalstats-output {
+		font-size:11px;
+		line-height:140%;
+	}
+
+      </style>
+
+<?php
+
+}
+
+/*
 add dashboard widget
 */
 
 function generalstats_add_dashboard_widget() {
 	if (function_exists('wp_add_dashboard_widget'))
 		wp_add_dashboard_widget('generalstats_dashboard_widget', 'GeneralStats', 'GeneralStatsComplete');
-} 
+}
+
+/*
+add output to dashboard's right now box
+inspired by Stephanie Leary
+http://sillybean.net/
+*/
+
+function generalstats_add_right_now_box() {
+	echo('<p></p>');
+	GeneralStatsComplete();
+}
 
 /*
 called from widget_init hook
@@ -417,7 +449,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"1.03\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.04\"/>");
 }
 
 /*
@@ -847,6 +879,8 @@ function createGeneralStatsOptionPage() {
 
     $Use_Action_Hooks="Use_Action_Hooks";
 
+    $Integrate_Right_Now="Integrate_Right_Now";
+
     $fields_position_defaults=array(0 => "1", 1 => "", 2 => "2", 3 => "3", 4 => "4",
 	5 => "", 10 => "", 11 => "", 12 => "");
     $fields_description_defaults=array(0 => "Users", 1 => "Categories", 2 => "Posts", 3 => "Comments", 4 => "Pages", 5 => "Links", 6 => "Tags", 7 => "Link-Categories", 10 => "Words in Posts", 11 => "Words in Comments", 12 => "Words in Pages");
@@ -880,6 +914,13 @@ function createGeneralStatsOptionPage() {
 	  }
 	  else {
 	    update_option($fieldsPre.$Use_Action_Hooks, '0');
+	  }
+
+	  if (isset($_POST[$fieldsPre.$Integrate_Right_Now])) {
+	    update_option($fieldsPre.$Integrate_Right_Now, '1');
+	  }
+	  else {
+	    update_option($fieldsPre.$Integrate_Right_Now, '0');
 	  }
 
 	  if (isset($_POST[$fieldsPre.$Use_Ajax_Refresh])) {
@@ -923,6 +964,8 @@ function createGeneralStatsOptionPage() {
         update_option($fieldsPre.$Refresh_Time, '');
 
         update_option($fieldsPre.$Use_Action_Hooks, '1');
+
+        update_option($fieldsPre.$Integrate_Right_Now, '0');
 
  	  update_option($fieldsPre.$Cache_Time, '600');
 	  update_option($fieldsPre.$Rows_at_Once, '100');
@@ -1204,6 +1247,17 @@ As all stats are retrieved from the server on every refresh, a Refresh_Time of o
             <td><input type="text" onblur="generalstats_checkNumeric(this,1,3600,'','','',true);" size="8" maxlength="8" name="<?php echo($fieldsPre.$Refresh_Time); ?>" <?php if(get_option($fieldsPre.$Use_Ajax_Refresh)!=1) echo('disabled="disabled"'); ?> id="<?php echo($fieldsPre.$Refresh_Time); ?>" value="<?php echo get_option($fieldsPre.$Refresh_Time); ?>" /></td>
       </tr>
     </table><br /><br />
+
+<?php if (version_compare($wp_version, "2.7", ">=")) { ?>
+If you activate the next option, GeneralStats will integrate your stats into the "Right Now"-Box on your <a href="index.php">Dashboard</a>.
+
+    <table class="form-table">
+     <tr>
+        <td><label for ="<?php echo($fieldsPre.$Integrate_Right_Now); ?>"><?php echo($Integrate_Right_Now.'') ?></label></td>
+            <td><input type="checkbox" name="<?php echo($fieldsPre.$Integrate_Right_Now); ?>" id="<?php echo($fieldsPre.$Integrate_Right_Now); ?>" <?php if(get_option($fieldsPre.$Integrate_Right_Now)==1) echo('checked="checked"'); ?> /></td>
+      </tr>
+    </table><br /><br />
+<?php } ?>
 
 With the following options you can influence the caching behaviour of GeneralStats. If you activate Use_Action_Hooks, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer caching time.
 
@@ -1630,6 +1684,12 @@ if (get_option('GeneralStats_Use_Action_Hooks')=='1') {
 }
 
 add_action('wp_dashboard_setup', 'generalstats_add_dashboard_widget' );
+
+if (get_option('GeneralStats_Integrate_Right_Now')=='1') {
+	add_action('activity_box_end', 'generalstats_add_right_now_box');
+}
+
+add_action('admin_head-index.php', 'generalstats_add_dashboard_widget_css');
 
 add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
 

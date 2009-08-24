@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 1.04
+Version: 1.10
 Author URI: http://www.neotrinity.at
 */
 
@@ -41,29 +41,10 @@ called from init hook
 function generalstats_init() {
 
 	/*
-	Pre-2.6 compatibility
-	inspired by http://planetozh.com/blog/2008/07/what-plugin-coders-must-know-about-wordpress-26/
-	*/
-
-	if (!defined('WP_CONTENT_URL'))
-		define('WP_CONTENT_URL', get_option('siteurl') . '/wp-content');
-	if (!defined('WP_PLUGIN_URL'))
-		define('WP_PLUGIN_URL', WP_CONTENT_URL . '/plugins');
-
-	if (!defined('WP_CONTENT_DIR'))
-		define('WP_CONTENT_DIR', ABSPATH . 'wp-content');
-
-	if (!defined('WP_PLUGIN_DIR'))
-		define('WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins');
-
-	/*
 	GeneralStats Constant
 	*/
 
-	if (function_exists('plugins_url'))
-		DEFINE ('GENERALSTATS_PLUGINURL', plugins_url(plugin_basename(dirname(__FILE__))) . '/');
-	else
-		DEFINE ('GENERALSTATS_PLUGINURL', WP_PLUGIN_URL . '/'. plugin_basename(dirname(__FILE__)) . '/');
+	DEFINE ('GENERALSTATS_PLUGINURL', plugins_url('', __FILE__) . '/');
 
 	/* check for ajax-refresh-call */
 
@@ -81,8 +62,7 @@ function generalstats_init() {
 /*
 add hooks for forcing a cache refresh;
 unfortunately the list on http://codex.wordpress.org/Plugin_API/Action_Reference
-is not complete, so i walked through the source of
-wp 2.3 and 2.8 to find the appropriate triggers
+is not complete, so i walked through the wp source to find the appropriate triggers
 */
 
 function generalstats_add_refresh_hooks() {
@@ -92,18 +72,7 @@ function generalstats_add_refresh_hooks() {
 	*/
 
 	add_action('user_register', 'GeneralStatsForceCacheRefresh');
-
-	/*
-	as deleted_user does not exist
-	until wp 2.8, we alternatively include delete_user
-	*/
-
-	global $wp_version;
-
-	if (version_compare($wp_version, "2.8", "<"))
-		add_action('delete_user', 'GeneralStatsForceCacheRefresh');
-	else
-		add_action('deleted_user', 'GeneralStatsForceCacheRefresh');
+	add_action('deleted_user', 'GeneralStatsForceCacheRefresh');
 
 	/*
 	posts & pages
@@ -222,7 +191,7 @@ function generalstats_adminmenu_plugin_actions($links, $file) {
 
 /*
 loads the necessary java-scripts,
-which are all included in wordpress >= 2.1
+which are all included in wordpress
 for the admin-page
 */
 
@@ -237,44 +206,33 @@ process the admin_color-array
 */
 
 function generalstats_get_admin_colors() {
-	global $wp_version;
-
-	if (version_compare($wp_version, "2.5", ">=")) {
-
-		/*
-		default colors for >= WP 2.5 (fresh)
-		*/
-
-		$available_admin_colors=array("fresh" => array("#464646", "#6D6D6D", "#F1F1F1", "#DFDFDF"), "classic" => array("#073447", "#21759B", "#EAF3FA", "#BBD8E7") );
-
-		$current_color = get_user_option('admin_color');
-		if (strlen($current_color)<1)
-			$current_color="fresh";
-
-		/*
-		include user-defined color schemes
-		*/
-
-		$generalstats_available_admin_colors = apply_filters('generalstats_available_admin_colors', array());
-
-		if (!empty($generalstats_available_admin_colors) && is_array($generalstats_available_admin_colors))
-			foreach($generalstats_available_admin_colors as $key => $available_admin_color)
-				if (is_array($available_admin_color) && sizeof($available_admin_color)==4)
-					if (!array_key_exists($key, $available_admin_colors))
-						$available_admin_colors[$key]=$generalstats_available_admin_colors[$key];
-
-		if (!array_key_exists($current_color, $available_admin_colors))
-			return $available_admin_colors["fresh"];
-		else
-			return $available_admin_colors[$current_color];
-
-	}
 
 	/*
-	WP 2.3 colors
+	default colors = fresh
 	*/
 
-	return array("#14568A", "#14568A", "", "#C3DEF1");
+	$available_admin_colors=array("fresh" => array("#464646", "#6D6D6D", "#F1F1F1", "#DFDFDF"), "classic" => array("#073447", "#21759B", "#EAF3FA", "#BBD8E7") );
+
+	$current_color = get_user_option('admin_color');
+	if (strlen($current_color)<1)
+		$current_color="fresh";
+
+	/*
+	include user-defined color schemes
+	*/
+
+	$generalstats_available_admin_colors = apply_filters('generalstats_available_admin_colors', array());
+
+	if (!empty($generalstats_available_admin_colors) && is_array($generalstats_available_admin_colors))
+		foreach($generalstats_available_admin_colors as $key => $available_admin_color)
+			if (is_array($available_admin_color) && sizeof($available_admin_color)==4)
+				if (!array_key_exists($key, $available_admin_colors))
+					$available_admin_colors[$key]=$generalstats_available_admin_colors[$key];
+
+	if (!array_key_exists($current_color, $available_admin_colors))
+		return $available_admin_colors["fresh"];
+	else
+		return $available_admin_colors[$current_color];
 }
 
 /*
@@ -395,8 +353,7 @@ add dashboard widget
 */
 
 function generalstats_add_dashboard_widget() {
-	if (function_exists('wp_add_dashboard_widget'))
-		wp_add_dashboard_widget('generalstats_dashboard_widget', 'GeneralStats', 'GeneralStatsComplete');
+	wp_add_dashboard_widget('generalstats_dashboard_widget', 'GeneralStats', 'GeneralStatsComplete');
 }
 
 /*
@@ -415,33 +372,7 @@ called from widget_init hook
 */
 
 function widget_generalstats_init() {
-
-	global $wp_version;
-
-	/*
-	WP >= 2.8
-	*/
-
-	if(version_compare($wp_version, "2.8", ">=")) {
-		$widgetFile=WP_PLUGIN_DIR.'/'.plugin_basename(dirname(__FILE__)).'/generalstats_widget.php';
-
-		if (file_exists($widgetFile)) {
-			include($widgetFile);
-			register_widget('WP_Widget_GeneralStats');
-		}
-	}
-
-	/*
-	WP < 2.8
-	*/
-
-	else {
-		$plugin_name="GeneralStats";
-		$widgets="widgets";
-
-		register_sidebar_widget(array($plugin_name, $widgets), 'widget_generalstats');
-		register_widget_control(array($plugin_name, $widgets), 'widget_generalstats_control', 300, 100);
-	}
+	register_widget('WP_Widget_GeneralStats');
 }
 
 /*
@@ -449,50 +380,8 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"1.04\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.10\"/>");
 }
-
-/*
-widget functions
-*/
-
-function widget_generalstats($args) {
-	extract($args);
-
-	$options = get_option('widget_generalstats');
-	$title = $options['title'];
-
-	echo $before_widget;
-	echo $before_title . htmlentities($title) . $after_title;
-	GeneralStatsComplete();
-    	echo $after_widget;
-}
-
-/*
-widget control
-*/
-
-function widget_generalstats_control() {
-
-	$generalstats_title="generalstats-title";
-	$generalstats_submit="generalstats-submit";
-	$widget_generalstats="widget_generalstats";
-
-	// Get our options and see if we're handling a form submission.
-	$options = get_option($widget_generalstats);
-	if ( !is_array($options) )
-		$options = array('title'=>'', 'buttontext'=>__('GeneralStats', 'widgets'));
-		if ( $_POST['generalstats-submit'] ) {
-			$options['title'] = strip_tags(stripslashes($_POST[$generalstats_title]));
-			update_option($widget_generalstats, $options);
-		}
-
-		$title = htmlspecialchars($options['title'], ENT_QUOTES);
-		
-		echo '<p>' . __('Title:') . ' <input id="'.$generalstats_title.'" name="'.$generalstats_title.'" type="text" value="'.$title.'" /></p>';
-		echo '<input type="hidden" id="'.$generalstats_submit.'" name="'.$generalstats_submit.'" value="1" />';
-		echo '<p><a href="options-general.php?page='.plugin_basename(__FILE__).'">' . __('Settings') . '</a></p>';
-	}
 
 /*
 echoes stats as defined in the option page
@@ -788,11 +677,9 @@ add GeneralStats to WordPress Option Page
 */
 
 function addGeneralStatsOptionPage() {
-    if (function_exists('add_options_page')) {
-        $page=add_options_page('GeneralStats', 'GeneralStats', 8, __FILE__, 'createGeneralStatsOptionPage');
-        add_action('admin_print_scripts-'.$page, 'generalstats_admin_print_scripts');
-        add_action('admin_head-'.$page, 'generalstats_admin_head');
-    }
+	$page=add_options_page('GeneralStats', 'GeneralStats', 8, __FILE__, 'createGeneralStatsOptionPage');
+	add_action('admin_print_scripts-'.$page, 'generalstats_admin_print_scripts');
+	add_action('admin_head-'.$page, 'generalstats_admin_head');
 }
 
 /*
@@ -845,10 +732,10 @@ Output JS
 */
 
 function GeneralStatsOptionPageActionButtons($num) { ?>
-	    <div id="generalstats_actionbuttons_<?php echo($num); ?>" class="submit" style="display:none">
-      	<input type="button" id="info_update_click<?php echo($num); ?>" name="info_update_click<?php echo($num); ?>" value="<?php echo('Update options') ?>" />
-	      <input type="button" id="load_default_click<?php echo($num); ?>" name="load_default_click<?php echo($num); ?>" value="<?php echo('Load defaults') ?>" />
-	    </div>
+	<div id="generalstats_actionbuttons_<?php echo($num); ?>" class="submit" style="display:none">
+		<input type="button" id="info_update_click<?php echo($num); ?>" name="info_update_click<?php echo($num); ?>" value="<?php echo('Update options') ?>" />
+		<input type="button" id="load_default_click<?php echo($num); ?>" name="load_default_click<?php echo($num); ?>" value="<?php echo('Load defaults') ?>" />
+	</div>
 <?php }
 
 /*
@@ -988,8 +875,6 @@ function createGeneralStatsOptionPage() {
 
       <?php }
 
-    global $wp_version;
-
     foreach($sections as $key => $section) {
 		if (get_option($fieldsPre.$key.$sectionPost)!="") $sections[$key] = get_option($fieldsPre.$key.$sectionPost);
     }
@@ -1079,7 +964,6 @@ function createGeneralStatsOptionPage() {
 			$allSections['Drag_and_Drop']='0';
 	}
 
-	$allSections['Drag_and_Drop']='0';
 	$allSections['Preview']='0';
 
 	$generalstats_menu='';
@@ -1100,21 +984,15 @@ Welcome to the Settings-Page of <a target="_blank" href="http://www.neotrinity.a
 	<div id="<?php echo($fieldsPre); ?>Instructions<?php echo($sectionPost); ?>" <?php if ($sections['Instructions']==='0') { ?>style="display:none"<?php } ?>>
 
         <ul><li>It may be a good start for GeneralStats first-timers to click on <strong>Load defaults</strong>.</li>
-        <li>You can add available or remove taken tags (like posts, users, etc. ) via drag and drop between the lists in the <?php echo(generalstats_get_section_link('Drag_and_Drop', $allSections, 'Drag and Drop Layout Section')); ?>. To customize the descriptions click on the field which you want to change in any list and edit the output name in the form on the right. After clicking <strong>Change</strong> the selected tag's name is adopted in its list. The tags can be re-orderd within a list either by drag and drop or by clicking on the arrows on the particular tag's left hand side. Don't forget to save all your adjustments by clicking on <strong>Update options</strong>.<br />
+        <li>You can add available or remove taken tags (like posts, users, etc.) via drag and drop between the lists in the <?php echo(generalstats_get_section_link('Drag_and_Drop', $allSections, 'Drag and Drop Layout Section')); ?>. To customize the descriptions click on the field which you want to change in any list and edit the output name in the form on the right. After clicking <strong>Change</strong> the selected tag's name is adopted in its list. The tags can be re-orderd within a list either by drag and drop or by clicking on the arrows on the particular tag's left hand side. Don't forget to save all your adjustments by clicking on <strong>Update options</strong>.<br />
 
 Hint: All parameters of GeneralStats can also be changed without the usage of Javascript in the <?php echo(generalstats_get_section_link('Static_Tags', $allSections, 'Static Tags Section')); ?>.
 </li>
         <li>Style-customizations can be made in the <?php echo(generalstats_get_section_link('CSS_Tags', $allSections, 'CSS-Tags Section')); ?>. (Defaults are automatically populated via the <strong>Load defaults</strong> button)</li>
 	  <li>You can activate an optional Ajax refresh for automatical updates of your stats-output in the <?php echo(generalstats_get_section_link('Administrative_Options', $allSections, 'Administrative Options Section')); ?>. In this section you can also find the caching and performance options of GeneralStats.</li>
         <li>Before you publish the results you can use the <?php echo(generalstats_get_section_link('Preview', $allSections, 'Preview Section')); ?>.</li>
-        <li>Finally, you can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like.<?php if (version_compare($wp_version, "2.7", ">=")) { ?> Moreover you can also display your current stats-selection as <a href="index.php">Dashboard Widget</a>.<?php } ?></li>
-    <?php
-	if (!function_exists('register_uninstall_hook')) { ?>
-        <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly <a href="?page=<?php echo(plugin_basename(__FILE__)); ?>&amp;cleanup=true" onclick="javascript:return confirm('Are you sure you want to delete all your settings?')">click here</a> to clean up the database. Then disable it in the <a href="plugins.php">Plugins Tab</a> and delete the <code>generalstats</code> directory in your WordPress Plugins directory (usually wp-content/plugins) on your webserver.</li>
-    <?php }
-	else { ?>
+        <li>Finally, you can publish the previously selected and saved stats either by adding a <a href="widgets.php">Sidebar Widget</a> or by calling the php function <code>GeneralStatsComplete()</code> wherever you like. Moreover you can also display your current stats-selection as <a href="index.php">Dashboard Widget</a>.</li>
         <li>If you decide to uninstall GeneralStats firstly remove the optionally added <a href="widgets.php">Sidebar Widget</a> or the integrated php function call(s) and secondly disable and delete it in the <a href="plugins.php">Plugins Tab</a>.</li>
-    <?php } ?>
 </ul>
 
 <?php GeneralStatsOptionPageActionButtons(1); ?>
@@ -1248,7 +1126,6 @@ As all stats are retrieved from the server on every refresh, a Refresh_Time of o
       </tr>
     </table><br /><br />
 
-<?php if (version_compare($wp_version, "2.7", ">=")) { ?>
 If you activate the next option, GeneralStats will integrate your stats into the "Right Now"-Box on your <a href="index.php">Dashboard</a>.
 
     <table class="form-table">
@@ -1257,7 +1134,6 @@ If you activate the next option, GeneralStats will integrate your stats into the
             <td><input type="checkbox" name="<?php echo($fieldsPre.$Integrate_Right_Now); ?>" id="<?php echo($fieldsPre.$Integrate_Right_Now); ?>" <?php if(get_option($fieldsPre.$Integrate_Right_Now)==1) echo('checked="checked"'); ?> /></td>
       </tr>
     </table><br /><br />
-<?php } ?>
 
 With the following options you can influence the caching behaviour of GeneralStats. If you activate Use_Action_Hooks, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer caching time.
 
@@ -1693,8 +1569,68 @@ add_action('admin_head-index.php', 'generalstats_add_dashboard_widget_css');
 
 add_filter('plugin_action_links', 'generalstats_adminmenu_plugin_actions', 10, 2);
 
-if ( function_exists('register_uninstall_hook') )
-	register_uninstall_hook( __FILE__, 'generalstats_uninstall' );
+register_uninstall_hook( __FILE__, 'generalstats_uninstall' );
+
+/*
+widget class
+*/
+
+class WP_Widget_GeneralStats extends WP_Widget {
+
+	/*
+	constructor
+	*/
+
+	function WP_Widget_GeneralStats() {
+		$widget_ops = array('classname' => 'widget_generalstats', 'description' => 'Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.');
+		$this->WP_Widget('generalstats', 'GeneralStats', $widget_ops);
+	}
+
+	/*
+	produces the widget-output
+	*/
+
+	function widget($args, $instance) {
+		extract($args);
+
+		$title = empty($instance['title']) ? '&nbsp;' : apply_filters('widget_title', $instance['title']);
+
+		echo $before_widget;
+		echo $before_title . $title . $after_title;
+		GeneralStatsComplete();
+	    	echo $after_widget;
+	}
+
+	/*
+	the backend-form with widget-title and settings-link
+	*/
+
+	function form($instance) {
+		$title = attribute_escape($instance['title']);
+		?>
+
+		<p><label for="<?php echo $this->get_field_id('title'); ?>">
+		<?php _e('Title:'); ?>
+
+		<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" /></label></p>
+
+		<p><a href="options-general.php?page=<?php echo(plugin_basename(__FILE__)); ?>"><?php _e('Settings') ?></a></p>
+
+		<?php
+	}
+
+	/*
+	saves an updated title
+	*/
+
+	function update( $new_instance, $old_instance ) {
+		$instance = $old_instance;
+		$instance['title'] = strip_tags($new_instance['title']);
+
+		return $instance;
+	}
+
+}
 
 /*
 database cleanup on uninstall
@@ -1730,6 +1666,8 @@ function generalstats_uninstall() {
 	delete_option($fieldsPre."Thousand_Delimiter");
 
 	delete_option($fieldsPre.'Use_Action_Hooks');
+
+	delete_option($fieldsPre.'Integrate_Right_Now');
 
 	delete_option($fieldsPre."Cache_Time");
 	delete_option($fieldsPre."Rows_at_Once");

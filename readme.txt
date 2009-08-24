@@ -2,7 +2,7 @@
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=neo%40neotrinity%2eat&item_name=neotrinity%2eat&no_shipping=1&no_note=1&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
 Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, ajax, javascript, prototype
-Requires at least: 2.3
+Requires at least: 2.8
 Tested up to: 2.9
 Stable tag: trunk
 
@@ -24,7 +24,8 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 
 Please find the version for WordPress
 
-* 2.3 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
+* 2.8 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
+* 2.3 to 2.7 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.3-2.7.zip)
 * 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
 * minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
 

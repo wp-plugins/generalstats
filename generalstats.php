@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Bernhard Riedl
-Version: 1.10
+Version: 1.11
 Author URI: http://www.neotrinity.at
 */
 
@@ -380,7 +380,7 @@ adds metainformation - please leave this for stats!
 */
 
 function generalstats_wp_head() {
-  echo("<meta name=\"GeneralStats\" content=\"1.10\"/>");
+  echo("<meta name=\"GeneralStats\" content=\"1.11\"/>");
 }
 
 /*
@@ -469,12 +469,12 @@ function GeneralStatsCreateOutput() {
 
     $fieldsPre="GeneralStats_";
 
-    $before_list='<div class="generalstats-output">'.stripslashes(get_option($fieldsPre.'before_List'));
-    $after_list=stripslashes(get_option($fieldsPre.'after_List')).'</div>';
-    $before_tag=stripslashes(get_option($fieldsPre.'before_Tag'));
-    $after_tag=stripslashes(get_option($fieldsPre.'after_Tag'));
-    $before_detail=stripslashes(get_option($fieldsPre.'before_Details'));
-    $after_detail=stripslashes(get_option($fieldsPre.'after_Details'));
+    $before_list='<div class="generalstats-output">'.get_option($fieldsPre.'before_List');
+    $after_list=get_option($fieldsPre.'after_List').'</div>';
+    $before_tag=get_option($fieldsPre.'before_Tag');
+    $after_tag=get_option($fieldsPre.'after_Tag');
+    $before_detail=get_option($fieldsPre.'before_Details');
+    $after_detail=get_option($fieldsPre.'after_Details');
 
     $fieldsPost_Position="_Position";
     $fieldsPost_Description="_Description";
@@ -517,7 +517,7 @@ function GeneralStatsCreateOutput() {
 		    $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description);
 
 	          $count=number_format($count,'0','',get_option($fieldsPre.'Thousand_Delimiter'));
-	          $ret.= $before_tag.$tag.$after_tag.$before_detail.$count.$after_detail;
+	          $ret.= $before_tag.htmlspecialchars($tag, ENT_QUOTES).$after_tag.$before_detail.$count.$after_detail;
 		}
 	    }
     }
@@ -786,15 +786,15 @@ function createGeneralStatsOptionPage() {
     if (isset($_POST['info_update'])) {
 
         foreach ($fields as $field) {
-            update_option($fieldsPre.$field.$fieldsPost_Position, $_POST[$fieldsPre.$field.$fieldsPost_Position]);
-            update_option($fieldsPre.$field.$fieldsPost_Description, $_POST[$fieldsPre.$field.$fieldsPost_Description]);
+            update_option($fieldsPre.$field.$fieldsPost_Position, stripslashes($_POST[$fieldsPre.$field.$fieldsPost_Position]));
+            update_option($fieldsPre.$field.$fieldsPost_Description, stripslashes($_POST[$fieldsPre.$field.$fieldsPost_Description]));
         }
 
         foreach ($csstags as $csstag) {
-            update_option($fieldsPre.$csstag, $_POST[$fieldsPre.$csstag]);
+            update_option($fieldsPre.$csstag, stripslashes($_POST[$fieldsPre.$csstag]));
         }
 
-        update_option($fieldsPre.$Thousand_Delimiter, $_POST[$fieldsPre.$Thousand_Delimiter]);
+        update_option($fieldsPre.$Thousand_Delimiter, stripslashes($_POST[$fieldsPre.$Thousand_Delimiter]));
 
 	  if (isset($_POST[$fieldsPre.$Use_Action_Hooks])) {
 	    update_option($fieldsPre.$Use_Action_Hooks, '1');
@@ -907,14 +907,14 @@ function createGeneralStatsOptionPage() {
 	  $upArrow='<img class="generalstats_arrowbutton" src="'.GENERALSTATS_PLUGINURL.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
 	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.GENERALSTATS_PLUGINURL.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
         $available_Fields=GeneralStats_array_remval($key, $available_Fields);
-        $listTaken.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
+        $listTaken.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.htmlspecialchars($tag, ENT_QUOTES).$after_tag."\n";
     }
 
     foreach($available_Fields as $key){
         $tag=get_option($fieldsPre.$fields[$key].$fieldsPost_Description). ' ('. $fields[$key]. ')';
 	  $upArrow='<img class="generalstats_arrowbutton" src="'.GENERALSTATS_PLUGINURL.'arrow_up_blue.png" onclick="generalstats_moveElementUp('.$key.');" alt="move element up" />';
 	  $downArrow='<img class="generalstats_arrowbutton" style="margin-right:15px" src="'.GENERALSTATS_PLUGINURL.'arrow_down_blue.png" onclick="generalstats_moveElementDown('.$key.');" alt="move element down" />';
-	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.$tag.$after_tag."\n";
+	  $listAvailable.= $before_tag. "\"".$beforeKey.$key."\">".$upArrow.$downArrow.htmlspecialchars($tag, ENT_QUOTES).$after_tag."\n";
     }
 
     $listTakenListeners="";
@@ -1056,8 +1056,8 @@ Hint: All parameters of GeneralStats can also be changed without the usage of Ja
             echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">");
             echo($field);
             echo("</label></td>");
-              echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" maxlength=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Position)."\" />\n");
-              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" maxlength=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".get_option($fieldsPre.$field.$fieldsPost_Description)."\" /></td>");
+              echo("<td><label for=\"".$fieldsPre.$field.$fieldsPost_Position."\">Position</label> <input type=\"text\" size=\"2\" maxlength=\"2\" name=\"".$fieldsPre.$field.$fieldsPost_Position."\" id=\"".$fieldsPre.$field.$fieldsPost_Position."\" value=\"".htmlspecialchars(get_option($fieldsPre.$field.$fieldsPost_Position), ENT_QUOTES)."\" />\n");
+              echo("<label for=\"".$fieldsPre.$field.$fieldsPost_Description."\">Description</label> <input type=\"text\" size=\"20\" maxlength=\"20\" name=\"".$fieldsPre.$field.$fieldsPost_Description."\" id=\"".$fieldsPre.$field.$fieldsPost_Description."\" value=\"".htmlspecialchars(get_option($fieldsPre.$field.$fieldsPost_Description), ENT_QUOTES)."\" /></td>");
           echo("</tr>");
      }
 
@@ -1086,7 +1086,7 @@ In this section you can customize the layout of <?php echo(generalstats_get_sect
             echo("<td><label for=\"".$fieldsPre.$csstag."\">");
             echo($csstag);
             echo("</label></td>");
-              echo("<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(stripslashes(get_option($fieldsPre.$csstag)))."\" /></td>");
+              echo("<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"".$fieldsPre.$csstag."\" id=\"".$fieldsPre.$csstag."\" value=\"".htmlspecialchars(get_option($fieldsPre.$csstag), ENT_QUOTES)."\" /></td>");
           echo("</tr>");
      }
 

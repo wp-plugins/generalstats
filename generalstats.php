@@ -4,13 +4,13 @@
 Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
-Author: Bernhard Riedl
-Version: 2.00
+Author: Dr. Bernhard Riedl
+Version: 2.01
 Author URI: http://www.bernhard.riedl.name/
 */
 
 /*
-Copyright 2006-2010 Bernhard Riedl
+Copyright 2006-2010 Dr. Bernhard Riedl
 
 Inspirations & Proof-Reading 2007-2010
 by Veronika Grascher
@@ -1663,7 +1663,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.00\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.01\"/>\n");
 	}
 
 	/*
@@ -2733,7 +2733,7 @@ class GeneralStats {
 
 				$count=number_format($count, 0 , '', $params['thousands_separator']);
 
-				$name=htmlentities($name, ENT_QUOTES, get_option('blog_charset'));
+				$name=htmlentities($name, ENT_QUOTES, get_option('blog_charset'), false);
 
 				/*
 				build tag for html output
@@ -3128,13 +3128,13 @@ class GeneralStats {
 		$default_value=null;
 
 		if ($type=='options')
-			$default_value=htmlentities($this->get_option($field), ENT_QUOTES, get_option('blog_charset'));
+			$default_value=htmlentities($this->get_option($field), ENT_QUOTES, get_option('blog_charset'), false);
 		else if ($type=='defaults')
-			$default_value=htmlentities($this->get_default($field), ENT_QUOTES, get_option('blog_charset'));
+			$default_value=htmlentities($this->get_default($field), ENT_QUOTES, get_option('blog_charset'), false);
 		else if ($type=='stat_pos')
 			$default_value=$this->get_stat_position($field);
 		else if ($type=='stat_name')
-			$default_value=htmlentities($this->get_custom_stat_name($field), ENT_QUOTES, get_option('blog_charset'));
+			$default_value=htmlentities($this->get_custom_stat_name($field), ENT_QUOTES, get_option('blog_charset'), false);
 		else
 			throw new Exception('type '.$type.' does not exist for field '.$field.'!');
 
@@ -3319,7 +3319,7 @@ class GeneralStats {
 
 			/* <![CDATA[ */
 
-			Event.observe(window, 'load', function(e){ <?php echo($javascript_toggle.'$(\''.$this->get_prefix().$name.'\')'.$javascript_fields. ', '.($js_checked == 1 ? true : false).');'); ?> });
+			Event.observe(window, 'load', function(e){ <?php echo($javascript_toggle.'$(\''.$this->get_prefix().$name.'\')'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');'); ?> });
 
 			/* ]]> */
 
@@ -3331,7 +3331,7 @@ class GeneralStats {
 			build trigger for settings_field
 			*/
 
-			$javascript_onclick_related_fields='onclick="'.$javascript_toggle.'this'.$javascript_fields. ', '.($js_checked == 1 ? true : false).');"';
+			$javascript_onclick_related_fields='onclick="'.$javascript_toggle.'this'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');"';
 		}
 
 		$checked=$this->get_setting_default_value($name, $type); ?>
@@ -3429,9 +3429,9 @@ class GeneralStats {
 
 	private function neotrinity_support() { ?>
 		<h3>Support</h3>
-			If you like to support the development of <?php echo($this->get_nicename()); ?>, you can invite my on a virtual pizza for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
+		If you like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&amp;business=bernhard%40riedl%2ename&amp;item_name=Donation%20for%20GeneralStats&amp;no_shipping=1&amp;no_note=1&amp;tax=0&amp;currency_code=EUR&amp;bn=PP%2dDonationsBF&amp;charset=UTF%2d8">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
 
-		<form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="neotrinity.at" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="USD" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br />
+		<form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="Donation for GeneralStats" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="EUR" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br />
 
 		Maybe you also want to <?php if (current_user_can('manage_links')) { ?><a href="link-add.php"><?php } ?>add a link<?php if (current_user_can('manage_links')) { ?></a><?php } ?> to <a href="http://www.neotrinity.at/projects/">http://www.neotrinity.at/projects/</a>.<br /><br />
 	<?php }
@@ -3525,7 +3525,7 @@ class GeneralStats {
 			add stat to list-selected
 			*/
 
-			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset')).$after_tag."\n";
+			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).$after_tag."\n";
 		}
 
 		/*
@@ -3547,7 +3547,7 @@ class GeneralStats {
 			add stat to list-available
 			*/
 
-			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset')).$after_tag."\n";
+			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).$after_tag."\n";
 		}
 
 		/*

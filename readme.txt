@@ -1,9 +1,9 @@
 === GeneralStats ===
 Contributors: neoxx
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=neo%40neotrinity%2eat&item_name=neotrinity%2eat&no_shipping=1&no_note=1&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=bernhard%40riedl%2ename&item_name=Donation%20for%20GeneralStats&no_shipping=1&no_note=1&tax=0&currency_code=EUR&bn=PP%2dDonationsBF&charset=UTF%2d8
 Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, prototype
 Requires at least: 2.8
-Tested up to: 3.0
+Tested up to: 3.1
 Stable tag: trunk
 
 Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
@@ -251,12 +251,16 @@ This is not only a feature but also a security update. - Thus, I'd strongly reco
 
 == Changelog ==
 
+= 2.01 =
+
+* corrected a few typos and fixed potential bugs
+
 = 2.00 =
 
 * start Changelog
 * completely reworked API methods and internal structure
 * Security improvements (wp_nonce, capabilities)
-* reworked Admin-Menu
+* reworked Admin Menu
 * extracted JavaScript-code
 * use WordPress transient-functionality for cache
 * word-counts now exclude common html tags

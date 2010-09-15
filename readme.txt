@@ -1,7 +1,7 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=bernhard%40riedl%2ename&item_name=Donation%20for%20GeneralStats&no_shipping=1&no_note=1&tax=0&currency_code=EUR&bn=PP%2dDonationsBF&charset=UTF%2d8
-Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, prototype
+Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, prototype, jquery
 Requires at least: 2.8
 Tested up to: 3.1
 Stable tag: trunk
@@ -18,7 +18,7 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 * easy to integrate (ships with multi/sidebar- and dashboard-widget functionality)
 * possible to integrate in "Right Now" box on the dashboard
 * high performing with caching technology and customizable memory usage
-* optional Ajax refresh
+* optional Ajax refresh (Prototype or jQuery)
 * stats-update by e-mail
 * drag and drop admin menu page
 * fully WP 3.0 multi-site network compatible
@@ -59,9 +59,13 @@ For performance optimization, you can play around with the `Rows at Once` parame
 
 Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should be appropriate.
 
+= Which Javascript library should I choose for the Ajax refresh in my theme? =
+
+That's [a well-covered topic in the web](https://encrypted.google.com/search?q=prototype+vs.+jquery). GeneralStats provides you with the flexibility to use either [Prototype](http://www.prototypejs.org/) or [jQuery](http://jquery.com/). Thus, your decision merely depends on what your other installed plugins use.
+
 = Why is the 'Drag and Drop Layout' not working? =
 
-This section is based on Javascript. Thus, you have to enable Javascript in your browser (this is a default setting in a [modern browser](http://browsehappy.com/) like Firefox). GeneralStats is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
+This section is based on Javascript. Thus, you have to enable Javascript in your browser (this is a default setting in a [modern browser](http://browsehappy.com/) like [Firefox](http://www.mozilla.com/?from=sfx&uid=313633&t=306)). GeneralStats is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
 
 = How can I adopt the color scheme in the GeneralStats Settings Tab? =
 
@@ -251,6 +255,10 @@ Array-Structure:
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 2.10 =
+
+* added jQuery as alternative to Prototype for the Ajax refresh in the front-end
 
 = 2.01 =
 

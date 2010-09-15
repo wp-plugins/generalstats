@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.01
+Version: 2.10
 Author URI: http://www.bernhard.riedl.name/
 */
 
@@ -119,6 +119,7 @@ class GeneralStats {
 		'ajax_refresh_time' => 30,
 		'renew_nonce' => false,
 		'anonymous_ajax_refresh' => true,
+		'ajax_refresh_lib' => 'prototype',
 
 		'cache_time' => 600,
 		'use_action_hooks' => true,
@@ -149,6 +150,15 @@ class GeneralStats {
 	*/
 
 	private $block_count=0;
+
+	/*
+	ajax refresh libraries for front end
+	*/
+
+	private $ajax_refresh_libs=array(
+		'prototype' => 'Prototype',
+		'jquery' => 'jQuery'
+	);
 
 	/*
 	options-page sections/option-groups
@@ -195,7 +205,8 @@ class GeneralStats {
 				'use_ajax_refresh' => 'Use Ajax Refresh',
 				'ajax_refresh_time' => 'Ajax Refresh Time',
 				'renew_nonce' => 'Renew nonce to assure continous updates',
-				'anonymous_ajax_refresh' => 'Allow anonymous Ajax Refresh Requests'
+				'anonymous_ajax_refresh' => 'Allow anonymous Ajax Refresh Requests',
+				'ajax_refresh_lib' => 'Ajax Refresh Library in Front-End'
 			)
 		),
 		'performance' => array(
@@ -263,7 +274,21 @@ class GeneralStats {
 	*/
 
 	private function register_scripts() {
-		wp_register_script($this->get_prefix().'refresh', $this->get_plugin_url().'js/refresh.js', array('prototype'), '2.00');
+
+		/*
+		jshashtable v2.1 by Tim Down
+		http://www.timdown.co.uk/jshashtable/
+		*/
+
+		wp_register_script($this->get_prefix().'jshashtable', $this->get_plugin_url().'js/jshashtable/jshashtable.js', array(), '2.1');
+
+		/*
+		GeneralStats JS
+		*/
+
+		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.10');
+
+		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', $this->get_prefix().'jshashtable'), '2.10');
 
 		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('prototype'), '2.00');
 
@@ -990,6 +1015,14 @@ class GeneralStats {
 				$input['rows_at_once']=$this->fallback_options['rows_at_once'];
 
 		/*
+		check ajax_refresh_lib
+		*/
+
+		if (array_key_exists('ajax_refresh_lib', $input))
+			if (!array_key_exists($input['ajax_refresh_lib'], $this->ajax_refresh_libs))
+				$input['ajax_refresh_lib']=$this->fallback_options['ajax_refresh_lib'];
+
+		/*
 		loop through all available stats
 		to find out which stats have been
 		selected by the user
@@ -1663,7 +1696,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.01\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.10\"/>\n");
 	}
 
 	/*
@@ -1737,12 +1770,24 @@ class GeneralStats {
 	*/
 
 	function refresh_print_scripts() {
-		wp_enqueue_script($this->get_prefix().'refresh');
+		$ajax_refresh_lib=$this->get_option('ajax_refresh_lib');
+
+		/*
+		force Prototype for Ajax-Refresh
+		in Admin Menu
+		*/
+
+		if (defined('WP_ADMIN') && WP_ADMIN)
+			$ajax_refresh_lib='prototype';
+
+		$ajax_refresh_lib='_'.$ajax_refresh_lib;
+
+		wp_enqueue_script($this->get_prefix().'refresh'.$ajax_refresh_lib);
 
 		$security_string=$this->get_prefix().'output';
 		$_ajax_nonce=wp_create_nonce($security_string);
 
-		wp_localize_script($this->get_prefix().'refresh', $this->get_prefix().'refresh_settings', array('ajax_url' => admin_url('admin-ajax.php'),
+		wp_localize_script($this->get_prefix().'refresh'.$ajax_refresh_lib, $this->get_prefix().'refresh_settings', array('ajax_url' => admin_url('admin-ajax.php'),
 '_ajax_nonce' => $_ajax_nonce, 'refresh_time' => $this->get_option('ajax_refresh_time')));
 	}
 
@@ -3786,6 +3831,8 @@ class GeneralStats {
 			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. WordPress normally defines this time to 24 hours. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
 
 			<li>You can also choose to allow only logged in users to execute <abbr title="asynchronous JavaScript and XML">Ajax</abbr> refresh operations if you deactivate the option <em>Allow anonymous Ajax Refresh Requests</em>.</li>
+
+			<li>In the last option, <em>Ajax Refresh Library in Front-End</em>, you can choose whether to use <a target="_blank" href="http://jquery.com/">jQuery</a> or <a target="_blank" href="http://www.prototypejs.org/">Prototype</a> for the Ajax Refresh in your theme.</li>
 		</ul>
 	<?php }
 
@@ -3794,7 +3841,7 @@ class GeneralStats {
 	*/
 
 	function setting_use_ajax_refresh($params=array()) {
-		$this->setting_checkfield('use_ajax_refresh', 'options', array('ajax_refresh_time', 'renew_nonce', 'anonymous_ajax_refresh'));
+		$this->setting_checkfield('use_ajax_refresh', 'options', array('ajax_refresh_time', 'renew_nonce', 'anonymous_ajax_refresh', 'ajax_refresh_lib'));
 	}
 
 	function setting_ajax_refresh_time($params=array()) {
@@ -3806,6 +3853,23 @@ class GeneralStats {
 
 	function setting_anonymous_ajax_refresh($params=array()) {
 		$this->setting_checkfield('anonymous_ajax_refresh', 'options');
+	}
+
+	function setting_ajax_refresh_lib($params=array()) {
+		?><select <?php echo($this->get_setting_name_and_id('ajax_refresh_lib')); ?>>
+
+			<?php
+			$ret_val='';
+
+			foreach ($this->ajax_refresh_libs as $key => $ajax_refresh_lib) {
+				$_selected = $key == $this->get_setting_default_value('ajax_refresh_lib', 'options') ? " selected='selected'" : '';
+				$ret_val.="\t<option value='".$key."'".$_selected.">" . $ajax_refresh_lib . "</option>\n";
+			}
+
+			echo $ret_val;
+			?>
+
+		</select><?php
 	}
 
 	/*

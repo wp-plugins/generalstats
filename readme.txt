@@ -37,6 +37,10 @@ Please find the version for WordPress
 * 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
 * minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
 
+**Plugin's website:** [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/)
+
+**Author's website:** [http://www.bernhard.riedl.name/](http://www.bernhard.riedl.name/)
+
 == Installation ==
 
 1. Copy the `generalstats` directory into your WordPress Plugins directory (usually wp-content/plugins). Hint: You can also conduct this step within your Admin Menu.

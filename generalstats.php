@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.10
+Version: 2.20
 Author URI: http://www.bernhard.riedl.name/
 */
 
@@ -119,7 +119,7 @@ class GeneralStats {
 		'ajax_refresh_time' => 30,
 		'renew_nonce' => false,
 		'anonymous_ajax_refresh' => true,
-		'ajax_refresh_lib' => 'prototype',
+		'ajax_refresh_lib' => 'jquery',
 
 		'cache_time' => 600,
 		'use_action_hooks' => true,
@@ -156,8 +156,8 @@ class GeneralStats {
 	*/
 
 	private $ajax_refresh_libs=array(
-		'prototype' => 'Prototype',
-		'jquery' => 'jQuery'
+		'jquery' => 'jQuery',
+		'prototype' => 'Prototype'
 	);
 
 	/*
@@ -280,15 +280,15 @@ class GeneralStats {
 		http://www.timdown.co.uk/jshashtable/
 		*/
 
-		wp_register_script($this->get_prefix().'jshashtable', $this->get_plugin_url().'js/jshashtable/jshashtable.js', array(), '2.1');
+		wp_register_script('jshashtable', $this->get_plugin_url().'js/jshashtable/jshashtable.js', array(), '2.1');
 
 		/*
 		GeneralStats JS
 		*/
 
-		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.10');
+		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.20');
 
-		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', $this->get_prefix().'jshashtable'), '2.10');
+		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', 'jshashtable'), '2.20');
 
 		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('prototype'), '2.00');
 
@@ -357,8 +357,6 @@ class GeneralStats {
 		add_action('wp_dashboard_setup', array(&$this, 'add_dashboard_widget'));
 
 		add_action('activity_box_end', array(&$this, 'add_right_now_box'));
-
-		add_action('admin_print_styles-index.php', array(&$this, 'add_dashboard_widget_css'));
 
 		/*
 		shortcodes
@@ -1489,7 +1487,7 @@ class GeneralStats {
 		$method=str_replace($this->get_prefix(), '', $action);
 
 		/*
-		prepare json string
+		prepare json object
 		*/
 
 		$json_params=array();
@@ -1536,18 +1534,34 @@ class GeneralStats {
 			return -1;
 		}
 
+		$ret_val='';
+
 		/*
-		prepare json string
+		use built-in function if available
 		*/
 
-		$ret_val='{';
+		if (function_exists('json_encode'))
+			$ret_val=json_encode($params);
 
-		foreach ($params as $key => $param)
-			$ret_val.='"'.$key.'":"'.addslashes($param).'",';
+		/*
+		or do our own json-encoding
+		*/
 
-		$ret_val=substr($ret_val, 0, -1);
+		else {
 
-		$ret_val.='}';
+			/*
+			prepare json string
+			*/
+
+			$ret_val='{';
+
+			foreach ($params as $key => $param)
+				$ret_val.='"'.$key.'":"'.str_replace(array('\\', '"'), array('\\\\', '\"'), $param).'",';
+
+			$ret_val=substr($ret_val, 0, -1);
+
+			$ret_val.='}';
+		}
 
 		header('Content-type: application/json');
 		echo($ret_val);
@@ -1696,7 +1710,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.10\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.20\"/>\n");
 	}
 
 	/*
@@ -1721,7 +1735,7 @@ class GeneralStats {
 		if (!current_user_can($this->get_option('dashboard_widget_capability')))
 			return;
 
-		$this->current_stats_block('dashboard_widget');
+		$this->current_stats_block('dashboard_widget', 'font-size:11px;line-height:140%');
 	}
 
 	/*
@@ -1734,26 +1748,8 @@ class GeneralStats {
 		if ($this->get_option('dashboard_right_now') && current_user_can($this->get_option('dashboard_right_now_capability'))) {
 			echo('<p></p>');
 
-			$this->current_stats_block('dashboard_right_now');
+			$this->current_stats_block('dashboard_right_now', 'font-size:11px;line-height:140%');
 		}
-	}
-
-	/*
-	adds some CSS to format Generalstats on the dashboard
-	*/
-
-	function add_dashboard_widget_css() {
-		if (($this->get_option('dashboard_widget') && current_user_can($this->get_option('dashboard_widget_capability'))) || ($this->get_option('dashboard_right_now') && current_user_can($this->get_option('dashboard_right_now_capability')))) { ?>
-
-		<style type="text/css">
-			.<?php echo($this->get_prefix(false)); ?>-refreshable-output, .<?php echo($this->get_prefix(false)); ?>-output {
-				font-size:11px;
-				line-height:140%;
-			}
-		</style>
-
-		<?php }
-
 	}
 
 	/*
@@ -1773,12 +1769,25 @@ class GeneralStats {
 		$ajax_refresh_lib=$this->get_option('ajax_refresh_lib');
 
 		/*
-		force Prototype for Ajax-Refresh
-		in Admin Menu
+		for optimization of
+		page-load times,
+		the default Ajax-Library
+		in the Admin Menu is jQuery,
+		but we force Prototype
+		in the Setting Page of
+		GeneralStats
+		because we need Prototype for
+		scriptaculous drag and drop
 		*/
 
-		if (defined('WP_ADMIN') && WP_ADMIN)
-			$ajax_refresh_lib='prototype';
+		if (defined('WP_ADMIN') && WP_ADMIN) {
+			$ajax_refresh_lib='jquery';
+
+			global $current_screen;
+
+			if ($current_screen->id=='settings_page_'.$this->get_prefix(false))
+				$ajax_refresh_lib='prototype';
+		}
 
 		$ajax_refresh_lib='_'.$ajax_refresh_lib;
 
@@ -2888,8 +2897,12 @@ class GeneralStats {
 	output current stats-block
 	*/
 
-	private function current_stats_block($filter) {
-		$filtered_params=apply_filters($this->get_prefix().$filter, array());
+	private function current_stats_block($filter, $format_container='') {
+		$unfiltered_params=array(
+			'format_container' => $format_container
+		);
+
+		$filtered_params=apply_filters($this->get_prefix().$filter, $unfiltered_params);
 
 		$params=array(
 			'use_container' => true,

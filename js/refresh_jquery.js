@@ -6,7 +6,7 @@ params (used only locally)
  - fields: all elements with the given class-name will be updated
  - compare_string: this string will be used for comparison with the result attribute in the json-response (starting at position 0)
  - callback_init
- - callback_finished
+ - callback_finished(json/null)
  - callback_error
 
 query_params (will be transferred to the server)
@@ -46,19 +46,17 @@ function generalstats_refresh(params, query_params) {
 				if (!generalstats_is_undefined(json._ajax_nonce) && json._ajax_nonce!==null && json._ajax_nonce.length)
 					XMLHttpRequest.query_params.put('_ajax_nonce', json._ajax_nonce);
 
-				var blocks = new Array();
+				var blocks = new jQuery();
 
 				if (XMLHttpRequest.params.containsKey('fields') && XMLHttpRequest.params.get('fields')!==null && XMLHttpRequest.params.get('fields').length)
-					blocks=jQuery.makeArray(jQuery(XMLHttpRequest.params.get('fields')));
+					blocks=jQuery(XMLHttpRequest.params.get('fields'));
 
-				if (XMLHttpRequest.params.containsKey('field') && XMLHttpRequest.params.get('field')!==null && XMLHttpRequest.params.get('field').length) {
-					var field=jQuery.makeArray(jQuery('#'+XMLHttpRequest.params.get('field')));
+				var field = new jQuery();
 
-					if (field.length>0)
-						blocks.push(field[0]);
-				}
+				if (XMLHttpRequest.params.containsKey('field') && XMLHttpRequest.params.get('field')!==null && XMLHttpRequest.params.get('field').length)
+					field=jQuery('#'+XMLHttpRequest.params.get('field'));
 
-				if (blocks.length>0) {
+				if (blocks.length>0 || field.length>0) {
 					if (generalstats_is_undefined(json.result) || json.result===null || !json.result.length)
 						throw -2;
 
@@ -67,8 +65,8 @@ function generalstats_refresh(params, query_params) {
 					if (XMLHttpRequest.params.containsKey('compare_string') && XMLHttpRequest.params.get('compare_string')!==null && XMLHttpRequest.params.get('compare_string').length && result.indexOf(XMLHttpRequest.params.get('compare_string'))!==0)
 						throw -3;
 
-					for (var i=0;i<blocks.length;i++)
-						jQuery(blocks[i]).replaceWith(result);
+					blocks.replaceWith(result);
+					field.replaceWith(result);
 				}
 			}
 
@@ -90,7 +88,18 @@ function generalstats_refresh(params, query_params) {
 		complete: function(XMLHttpRequest, textStatus) {
 			if (XMLHttpRequest.params.containsKey('callback_finished') && XMLHttpRequest.params.get('callback_finished')!==null) {
 				var callback_finished_function = XMLHttpRequest.params.get('callback_finished');
-				window[callback_finished_function()];
+
+				var json;
+
+				try {
+					json=jQuery.parseJSON(XMLHttpRequest.responseText);
+				}
+
+				catch(error) {
+					json=null;
+				}
+		
+				window[callback_finished_function(json)];
 			}
 		}
 	});
@@ -140,7 +149,7 @@ function generalstats_register_refresh(params, query_params) {
 }
 
 function generalstats_initiate_refresh(params, query_params) {
-	jQuery(window).load(function(e){
+	jQuery(window).load(function(){
 		generalstats_register_refresh(params, query_params);
 	});
 }
@@ -181,7 +190,7 @@ generalstats_query_params.put('action', 'generalstats_output');
 
 generalstats_query_params.put('_ajax_nonce', generalstats_refresh_settings._ajax_nonce);
 
-jQuery(window).load(function(e){
+jQuery(window).load(function(){
 	if (jQuery('div.generalstats-refreshable-output').length>0)
 			generalstats_register_refresh(generalstats_params, generalstats_query_params);
 });

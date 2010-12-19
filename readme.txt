@@ -1,9 +1,9 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=bernhard%40riedl%2ename&item_name=Donation%20for%20GeneralStats&no_shipping=1&no_note=1&tax=0&currency_code=EUR&bn=PP%2dDonationsBF&charset=UTF%2d8
-Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, prototype, jquery
+Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery, prototype
 Requires at least: 2.8
-Tested up to: 3.1
+Tested up to: 3.2
 Stable tag: trunk
 
 Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
@@ -18,7 +18,7 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 * easy to integrate (ships with multi/sidebar- and dashboard-widget functionality)
 * possible to integrate in "Right Now" box on the dashboard
 * high performing with caching technology and customizable memory usage
-* optional Ajax refresh (Prototype or jQuery)
+* optional Ajax refresh (jQuery or Prototype)
 * stats-update by e-mail
 * drag and drop admin menu page
 * fully WP 3.0 multi-site network compatible
@@ -259,6 +259,12 @@ Array-Structure:
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 2.20 =
+
+* Changed default Ajax library to jQuery (Prototype is by default now only used for the settings-page)
+* Code clean-up in the Ajax-refresh-files
+* Small bug-fixes and enhancements
 
 = 2.10 =
 

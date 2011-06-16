@@ -180,17 +180,18 @@ function generalstats_hashtable_to_querystring(hashtable) {
 
 var generalstats_params = new Hashtable();
 
-generalstats_params.put('compare_string', '<div class="generalstats-refreshable-output"');
-
-generalstats_params.put('fields', 'div.generalstats-refreshable-output');
-
 var generalstats_query_params = new Hashtable();
 
-generalstats_query_params.put('action', 'generalstats_output');
-
-generalstats_query_params.put('_ajax_nonce', generalstats_refresh_settings._ajax_nonce);
-
 jQuery(window).load(function(){
-	if (jQuery('div.generalstats-refreshable-output').length>0)
-			generalstats_register_refresh(generalstats_params, generalstats_query_params);
+	if (jQuery('div.generalstats-refreshable-output').length>0) {
+		generalstats_params.put('compare_string', '<div class="generalstats-refreshable-output"');
+
+		generalstats_params.put('fields', 'div.generalstats-refreshable-output');
+
+		generalstats_query_params.put('action', 'generalstats_output');
+
+		generalstats_query_params.put('_ajax_nonce', generalstats_refresh_settings._ajax_nonce);
+
+		generalstats_register_refresh(generalstats_params, generalstats_query_params);
+	}
 });

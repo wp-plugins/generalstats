@@ -5,14 +5,14 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.20
+Version: 2.30
 Author URI: http://www.bernhard.riedl.name/
 */
 
 /*
-Copyright 2006-2010 Dr. Bernhard Riedl
+Copyright 2006-2011 Dr. Bernhard Riedl
 
-Inspirations & Proof-Reading 2007-2010
+Inspirations & Proof-Reading 2007-2011
 by Veronika Grascher
 
 This program is free software:
@@ -118,7 +118,6 @@ class GeneralStats {
 		'use_ajax_refresh' => true,
 		'ajax_refresh_time' => 30,
 		'renew_nonce' => false,
-		'anonymous_ajax_refresh' => true,
 		'ajax_refresh_lib' => 'jquery',
 
 		'cache_time' => 600,
@@ -132,6 +131,8 @@ class GeneralStats {
 
 		'mail_stats_schedule' => 'no',
 		'count_html_tags' => false,
+		'all_users_can_view_stats' => true,
+		'view_stats_capability' => 'read',
 		'debug_mode' => false,
 
 		'section' => 'drag_and_drop'
@@ -205,7 +206,6 @@ class GeneralStats {
 				'use_ajax_refresh' => 'Use Ajax Refresh',
 				'ajax_refresh_time' => 'Ajax Refresh Time',
 				'renew_nonce' => 'Renew nonce to assure continous updates',
-				'anonymous_ajax_refresh' => 'Allow anonymous Ajax Refresh Requests',
 				'ajax_refresh_lib' => 'Ajax Refresh Library in Front-End'
 			)
 		),
@@ -234,6 +234,8 @@ class GeneralStats {
 			'fields' => array(
 				'mail_stats_schedule' => 'Schedule of Mail with Stats updates',
 				'count_html_tags' => 'Include HTML-Tags in Word-Counts',
+				'all_users_can_view_stats' => 'All users can view stats',
+				'view_stats_capability' => 'Capability to view stats',	
 				'debug_mode' => 'Enable Debug-Mode'
 			)
 		),
@@ -286,9 +288,9 @@ class GeneralStats {
 		GeneralStats JS
 		*/
 
-		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.20');
+		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.30');
 
-		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', 'jshashtable'), '2.20');
+		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', 'jshashtable'), '2.30');
 
 		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('prototype'), '2.00');
 
@@ -335,7 +337,7 @@ class GeneralStats {
 			can be restricted
 			*/
 
-			if ($this->get_option('anonymous_ajax_refresh')) {
+			if ($this->get_option('all_users_can_view_stats')) {
 				add_action('wp_ajax_nopriv_'.$this->get_prefix().'output', array(&$this, 'wp_ajax_refresh'));
 				add_action('wp_ajax_nopriv_'.$this->get_prefix().'count', array(&$this, 'wp_ajax_refresh'));
 			}
@@ -890,6 +892,13 @@ class GeneralStats {
 			$this->log('using fallback-defaults '.var_export($this->fallback_defaults, true));
 		}
 
+		/*
+		maybe upgrade to v2.40?
+		*/
+
+		if (array_key_exists('anonymous_ajax_refresh', $this->options))
+			$this->upgrade_v24();
+
 		$this->log('setting options to '.var_export($this->options, true));
 
 		$this->log('setting defaults to '.var_export($this->defaults, true));
@@ -931,16 +940,16 @@ class GeneralStats {
 			'display',
 			'use_ajax_refresh',
 			'renew_nonce',
-			'anonymous_ajax_refresh',
 			'dashboard_widget',
 			'dashboard_right_now',
 			'use_action_hooks',
 			'count_html_tags',
+			'all_users_can_view_stats',
 			'debug_mode'
 		);
 
 		foreach ($check_fields as $check_field) {
-			$input[$check_field] = ($input[$check_field] == 1 ? true : false);
+			$input[$check_field] = (isset($input[$check_field]) && $input[$check_field] == 1 ? true : false);
 		}
 
 		/*
@@ -967,13 +976,14 @@ class GeneralStats {
 		$capability_fields=array(
 			'dashboard_widget',
 			'dashboard_right_now',
+			'view_stats',
 			'calculator'
 		);
 
 		$capabilities=$this->get_all_capabilities();
 
 		foreach ($capability_fields as $capability_field) {
-			if (!in_array($input[$capability_field.'_capability'], $capabilities))
+			if (isset($input[$capability_field.'_capability']) && !in_array($input[$capability_field.'_capability'], $capabilities))
 				unset($input[$capability_field.'_capability']);
 		}
 
@@ -1320,7 +1330,7 @@ class GeneralStats {
 
 		$settings['use_container']='1';
 		$settings['display']='1';
-		$settings['anonymous_ajax_refresh']='1';
+		$settings['all_users_can_view_stats']='1';
 
 		/*
 		validate retrieved settings
@@ -1342,6 +1352,38 @@ class GeneralStats {
 		delete_option($fieldsPre.'Cache');
 		delete_option($fieldsPre.'Force_Cache_Refresh');
 		delete_option($fieldsPre.'Last_Cache_Time');
+
+		$this->log('upgrade finished. - retrieved options are: '.var_export($settings, true));
+	}
+
+	/*
+	upgrade options to GeneralStats v2.40
+	*/
+
+	private function upgrade_v24() {
+
+		$this->log('upgrade options to '.$this->get_nicename().' v2.40');
+
+		/*
+		rename setting
+		*/
+
+		$this->options['all_users_can_view_stats']=$this->options['anonymous_ajax_refresh'];
+
+		unset($this->options['anonymous_ajax_refresh']);
+
+		$settings=array();
+
+		$settings['stats_selected']=$this->stats_selected;
+		$settings['stats_available']=$this->stats_available;
+		$settings['defaults']=$this->defaults;
+		$settings['options']=$this->options;
+
+		/*
+		store new settings
+		*/
+
+		update_option($this->get_prefix(false), $settings);
 
 		$this->log('upgrade finished. - retrieved options are: '.var_export($settings, true));
 	}
@@ -1454,6 +1496,9 @@ class GeneralStats {
 		/*
 		security check
 		*/
+
+		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
+			die('-1');
 
 		$security_string=$action.str_replace(array('\n', "\n"), '', $query_string);
 
@@ -1710,7 +1755,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.20\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.30\"/>\n");
 	}
 
 	/*
@@ -1766,6 +1811,14 @@ class GeneralStats {
 	*/
 
 	function refresh_print_scripts() {
+
+		/*
+		security check
+		*/
+
+		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
+			return;
+
 		$ajax_refresh_lib=$this->get_option('ajax_refresh_lib');
 
 		/*
@@ -1780,7 +1833,7 @@ class GeneralStats {
 		scriptaculous drag and drop
 		*/
 
-		if (defined('WP_ADMIN') && WP_ADMIN) {
+		if (is_admin()) {
 			$ajax_refresh_lib='jquery';
 
 			global $current_screen;
@@ -1796,8 +1849,15 @@ class GeneralStats {
 		$security_string=$this->get_prefix().'output';
 		$_ajax_nonce=wp_create_nonce($security_string);
 
-		wp_localize_script($this->get_prefix().'refresh'.$ajax_refresh_lib, $this->get_prefix().'refresh_settings', array('ajax_url' => admin_url('admin-ajax.php'),
-'_ajax_nonce' => $_ajax_nonce, 'refresh_time' => $this->get_option('ajax_refresh_time')));
+		wp_localize_script(
+			$this->get_prefix().'refresh'.$ajax_refresh_lib,
+			$this->get_prefix().'refresh_settings',
+			array(
+				'ajax_url' => admin_url('admin-ajax.php'),
+				'_ajax_nonce' => $_ajax_nonce,
+				'refresh_time' => $this->get_option('ajax_refresh_time')
+			)
+		);
 	}
 
 	/*
@@ -1954,6 +2014,13 @@ class GeneralStats {
 		*/
 
 		$this->log('function _output, $params='.var_export($params, true));
+
+		/*
+		security check
+		*/
+
+		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
+			throw new Exception('You are not authorized to view stats!');
 
 		/*
 		fill params with default-values
@@ -2164,6 +2231,13 @@ class GeneralStats {
 		*/
 
 		$this->log('function _count, $params='.var_export($params, true));
+
+		/*
+		security check
+		*/
+
+		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
+			throw new Exception('You are not authorized to view stats!');
 
 		/*
 		fill params with default-values
@@ -3242,7 +3316,18 @@ class GeneralStats {
 		?>
 		</ul></div>
 
-		<div class="<?php echo($this->get_prefix()); ?>wrap">
+		<div id="<?php echo($this->get_prefix()); ?>content" class="<?php echo($this->get_prefix()); ?>wrap">
+
+		<script type="text/javascript">
+
+		/* <![CDATA[ */
+
+		if ($('<?php echo($this->get_prefix()); ?>content'))
+			$('<?php echo($this->get_prefix()); ?>content').style.display="none";
+
+		/* ]]> */
+
+		</script>
 
 		<?php if ($is_wp_options) { ?>
 			<form method="post" action="<?php echo(admin_url('options.php')); ?>">
@@ -3319,12 +3404,14 @@ class GeneralStats {
 	<?php echo($this->get_prefix()); ?>open_section(section);
 
 	/*
-	display js-menu
+	display js-menu and content-block
 	if js has been disabled,
 	the menu will not be visible
 	*/
 
 	$('<?php echo($this->get_prefix()); ?>menu').style.display="block";
+
+	$('<?php echo($this->get_prefix()); ?>content').style.display="block";
 
 	/* ]]> */
 
@@ -3485,9 +3572,10 @@ class GeneralStats {
 	outputs support paragraph
 	*/
 
-	private function neotrinity_support() { ?>
+	private function neotrinity_support() {
+		global $user_identity; ?>
 		<h3>Support</h3>
-		If you like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&amp;business=bernhard%40riedl%2ename&amp;item_name=Donation%20for%20GeneralStats&amp;no_shipping=1&amp;no_note=1&amp;tax=0&amp;currency_code=EUR&amp;bn=PP%2dDonationsBF&amp;charset=UTF%2d8">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
+		<?php echo($user_identity); ?>, if you would like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&amp;business=bernhard%40riedl%2ename&amp;item_name=Donation%20for%20GeneralStats&amp;no_shipping=1&amp;no_note=1&amp;tax=0&amp;currency_code=EUR&amp;bn=PP%2dDonationsBF&amp;charset=UTF%2d8">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
 
 		<form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_xclick" /><input type="hidden" name="business" value="&#110;&#101;&#111;&#64;&#x6E;&#x65;&#x6F;&#x74;&#x72;&#105;&#110;&#x69;&#x74;&#x79;&#x2E;&#x61;t" /><input type="hidden" name="item_name" value="Donation for GeneralStats" /><input type="hidden" name="no_shipping" value="2" /><input type="hidden" name="no_note" value="1" /><input type="hidden" name="currency_code" value="EUR" /><input type="hidden" name="tax" value="0" /><input type="hidden" name="bn" value="PP-DonationsBF" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" style="border:0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" /><img alt="if you like to, you can support me" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /></form><br />
 
@@ -3843,8 +3931,6 @@ class GeneralStats {
 
 			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. WordPress normally defines this time to 24 hours. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
 
-			<li>You can also choose to allow only logged in users to execute <abbr title="asynchronous JavaScript and XML">Ajax</abbr> refresh operations if you deactivate the option <em>Allow anonymous Ajax Refresh Requests</em>.</li>
-
 			<li>In the last option, <em>Ajax Refresh Library in Front-End</em>, you can choose whether to use <a target="_blank" href="http://jquery.com/">jQuery</a> or <a target="_blank" href="http://www.prototypejs.org/">Prototype</a> for the Ajax Refresh in your theme.</li>
 		</ul>
 	<?php }
@@ -3854,7 +3940,7 @@ class GeneralStats {
 	*/
 
 	function setting_use_ajax_refresh($params=array()) {
-		$this->setting_checkfield('use_ajax_refresh', 'options', array('ajax_refresh_time', 'renew_nonce', 'anonymous_ajax_refresh', 'ajax_refresh_lib'));
+		$this->setting_checkfield('use_ajax_refresh', 'options', array('ajax_refresh_time', 'renew_nonce', 'ajax_refresh_lib'));
 	}
 
 	function setting_ajax_refresh_time($params=array()) {
@@ -3862,10 +3948,6 @@ class GeneralStats {
 	}
 	function setting_renew_nonce($params=array()) {
 		$this->setting_checkfield('renew_nonce', 'options');
-	}
-
-	function setting_anonymous_ajax_refresh($params=array()) {
-		$this->setting_checkfield('anonymous_ajax_refresh', 'options');
 	}
 
 	function setting_ajax_refresh_lib($params=array()) {
@@ -3959,6 +4041,8 @@ class GeneralStats {
 
 			<li>If you select to <em>Include HTML-Tags in Word-Counts</em>, not only 'real text' but also HTML and Javascript tags will be counted.</li>
 
+			<li>If you want to keep the stats as a secret, you can deactivate <em>All users can view stats</em>. In that case, only users with the <em><a target="_blank" href="http://codex.wordpress.org/Roles_and_Capabilities">Capability</a> to view stats</em> can access this information.</li>
+
 			<li>The <em>Debug Mode</em> can be used to have a look on the actions undertaken by <?php echo($this->get_nicename()); ?> and to investigate unexpected behaviour.</li>
 		</ul>
 
@@ -3971,6 +4055,14 @@ class GeneralStats {
 
 	function setting_count_html_tags($params=array()) {
 		$this->setting_checkfield('count_html_tags', 'options');
+	}
+
+	function setting_all_users_can_view_stats($params=array()) {
+		$this->setting_checkfield('all_users_can_view_stats', 'options', array('view_stats_capability'), false);
+	}
+
+	function setting_view_stats_capability($params=array()) {
+		$this->setting_capability('view_stats', 'options');
 	}
 
 	function setting_debug_mode($params=array()) {
@@ -4139,15 +4231,20 @@ class WP_Widget_GeneralStats extends WP_Widget {
 
 		$title = !isset($instance['title']) ? '&nbsp;' : apply_filters('widget_title', $instance['title']);
 
+		$params=array(
+			'use_container' => true,
+			'display' => false
+		);
+
+		$stats=$generalstats->output($params);
+
+		if (empty($stats))
+			return;
+
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 
-		$params=array(
-			'use_container' => true,
-			'display' => true
-		);
-
-		$generalstats->output($params);
+		echo $stats;
 
 		echo $after_widget;
 	}

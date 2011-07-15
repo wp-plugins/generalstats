@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.30
+Version: 2.31
 Author URI: http://www.bernhard.riedl.name/
 */
 
@@ -1755,7 +1755,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.30\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.31\"/>\n");
 	}
 
 	/*
@@ -1849,11 +1849,18 @@ class GeneralStats {
 		$security_string=$this->get_prefix().'output';
 		$_ajax_nonce=wp_create_nonce($security_string);
 
+		/*
+		make sure that Ajax-queries use
+		the same protocol as the site
+		*/
+
+		$ajax_url=admin_url('admin-ajax.php', is_ssl() ? 'https' : 'http');
+
 		wp_localize_script(
 			$this->get_prefix().'refresh'.$ajax_refresh_lib,
 			$this->get_prefix().'refresh_settings',
 			array(
-				'ajax_url' => admin_url('admin-ajax.php'),
+				'ajax_url' => $ajax_url,
 				'_ajax_nonce' => $_ajax_nonce,
 				'refresh_time' => $this->get_option('ajax_refresh_time')
 			)

@@ -260,6 +260,10 @@ This is not only a feature but also a security update. - Thus, I'd strongly reco
 
 == Changelog ==
 
+= 2.31 =
+
+* fixed a bug with Ajax-update functionality in a SSL-environment. Thanks to huyz who has mentioned this in the forum http://wordpress.org/support/topic/plugin-generalstats-makes-https-call-to-admin-ajax-even-if-site-is-http
+
 = 2.30 =
 
 * revised the security model (replaced option `Allow anonymous Ajax Refresh Requests` with `All users can view stats` and added the option `Capability to view stats` to define the capability of a certain user to access the stats)

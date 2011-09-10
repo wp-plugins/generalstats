@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.31
+Version: 2.32
 Author URI: http://www.bernhard.riedl.name/
 */
 
@@ -446,7 +446,16 @@ class GeneralStats {
 		posts
 		*/
 
+		add_action('after_delete_post', array(&$this, 'force_post_cache_refresh'));
+
+		/*
+		deleted_post has been replaced
+		by after_delete_post
+		in WordPress 3.2
+		*/
+
 		add_action('deleted_post', array(&$this, 'force_post_cache_refresh'));
+
 		add_action('trashed_post', array(&$this, 'force_post_cache_refresh'));
 		add_action('untrashed_post', array(&$this, 'force_post_cache_refresh'));
 
@@ -454,7 +463,16 @@ class GeneralStats {
 		pages
 		*/
 
+		add_action('after_delete_post', array(&$this, 'force_page_cache_refresh'));
+
+		/*
+		deleted_post has been replaced
+		by after_delete_post
+		in WordPress 3.2
+		*/
+
 		add_action('deleted_post', array(&$this, 'force_page_cache_refresh'));
+
 		add_action('trashed_post', array(&$this, 'force_page_cache_refresh'));
 		add_action('untrashed_post', array(&$this, 'force_page_cache_refresh'));
 
@@ -1755,7 +1773,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.31\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.32\"/>\n");
 	}
 
 	/*

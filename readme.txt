@@ -19,6 +19,7 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 * possible to integrate in "Right Now" box on the dashboard
 * high performing with caching technology and customizable memory usage
 * optional Ajax refresh (jQuery or Prototype)
+* fully compatible with [https/SSL/TLS-sites](http://codex.wordpress.org/Administration_Over_SSL)
 * stats-update by e-mail
 * drag and drop admin menu page
 * fully WP 3.0 multi-site network compatible
@@ -69,7 +70,7 @@ That's [a well-covered topic in the web](https://encrypted.google.com/search?q=p
 
 = Why is the 'Drag and Drop Layout' not working? =
 
-This section is based on Javascript. Thus, you have to enable Javascript in your browser (this is a default setting in a [modern browser](http://browsehappy.com/) like [Firefox](http://www.mozilla.com/?from=sfx&uid=313633&t=306)). GeneralStats is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
+This section is based on Javascript. Thus, you have to enable Javascript in your browser (this is a default setting in a modern browser like [Firefox](http://www.mozilla.org/firefox?WT.mc_id=aff_en01&WT.mc_ev=click)). GeneralStats is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
 
 = How can I adopt the color scheme in the GeneralStats Settings Tab? =
 
@@ -259,6 +260,10 @@ Array-Structure:
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 2.32 =
+
+* added some WordPress 3.2 hooks
 
 = 2.31 =
 

@@ -5,14 +5,14 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.neotrinity.at/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.32
+Version: 2.33
 Author URI: http://www.bernhard.riedl.name/
 */
 
 /*
-Copyright 2006-2011 Dr. Bernhard Riedl
+Copyright 2006-2012 Dr. Bernhard Riedl
 
-Inspirations & Proof-Reading 2007-2011
+Inspirations & Proof-Reading 2007-2012
 by Veronika Grascher
 
 This program is free software:
@@ -267,7 +267,6 @@ class GeneralStats {
 
 		$this->set_plugin_url();
 		$this->retrieve_settings();
-		$this->register_scripts();
 		$this->register_hooks();
 	}
 
@@ -275,7 +274,7 @@ class GeneralStats {
 	register js libraries
 	*/
 
-	private function register_scripts() {
+	function register_scripts() {
 
 		/*
 		jshashtable v2.1 by Tim Down
@@ -304,6 +303,12 @@ class GeneralStats {
 	*/
 
 	private function register_hooks() {
+
+		/*
+		register externals
+		*/
+
+		add_action('init', array(&$this, 'register_scripts'));
 
 		/*
 		general
@@ -865,13 +870,24 @@ class GeneralStats {
 			}
 
 			/*
-			for some strange reason,
-			WordPress doesn't like to
-			write to an empty option
+			we intentionally write
+			the fallbacks in the
+			database to activate
+			built-in caching
+			and repair a broken
+			settings-array
 			*/
 
 			else {
-				update_option($this->get_prefix(false), array());
+				update_option(
+					$this->get_prefix(false),
+					array(
+						'stats_selected' => $this->fallback_stats_selected,
+						'stats_available' => $this->fallback_stats_available,
+						'defaults' => $this->fallback_defaults,
+						'options' => $this->fallback_options
+					)
+				);
 			}
 		}
 
@@ -950,7 +966,8 @@ class GeneralStats {
 		}
 
 		/*
-		check-fields are either 0 or 1
+		check-fields will be
+		converted to true/false
 		*/
 
 		$check_fields=array(
@@ -967,7 +984,7 @@ class GeneralStats {
 		);
 
 		foreach ($check_fields as $check_field) {
-			$input[$check_field] = (isset($input[$check_field]) && $input[$check_field] == 1 ? true : false);
+			$input[$check_field] = (isset($input[$check_field]) && $input[$check_field] == 1) ? true : false;
 		}
 
 		/*
@@ -1735,6 +1752,14 @@ class GeneralStats {
 	}
 
 	/*
+	Options Page Help Tab
+	*/
+
+	function options_page_help_tab() {
+		$this->add_help_tab($this->options_page_help());
+	}
+
+	/*
 	white list options
 	*/
 
@@ -1765,7 +1790,7 @@ class GeneralStats {
 
 		add_action('admin_print_scripts-'.$options_page, array(&$this, 'settings_print_scripts'));
 		add_action('admin_head-'.$options_page, array(&$this, 'admin_styles'));
-		add_contextual_help($options_page, $this->options_page_help());
+		add_action('load-'.$options_page, array(&$this, 'options_page_help_tab'));
 	}
 
 	/*
@@ -1773,7 +1798,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.32\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.33\"/>\n");
 	}
 
 	/*
@@ -3307,6 +3332,35 @@ class GeneralStats {
 	}
 
 	/*
+	handles adding a help-tab
+	*/
+
+	private function add_help_tab($help_text) {
+		$current_screen=get_current_screen();
+
+		/*
+		WP >= 3.0
+		*/
+
+		if (!method_exists($current_screen, 'add_help_tab'))
+			add_contextual_help($current_screen, $help_text);
+
+		/*
+		WP >= 3.3
+		*/
+
+		else {
+			$help_options=array(
+				'id' => $this->get_prefix(),
+				'title' => $this->get_nicename(),
+				'content' => $help_text
+			);
+
+			$current_screen->add_help_tab($help_options);
+		}
+	}
+
+	/*
 	Settings Page
 	*/
 
@@ -3954,7 +4008,7 @@ class GeneralStats {
 
 			<li>As all stats are retrieved from the server on every refresh, a <em>Ajax Refresh Time</em> of one second is mostly not realizable for the average server out there. Moreover, please remember that every update causes bandwith usage for your readers and your server.</li>
 
-			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. WordPress normally defines this time to 24 hours. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
+			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. In your installation, the nonce-life-time is defined as <?php $nonce_life=apply_filters('nonce_life', 86400); echo(number_format((float) ($nonce_life/3600), 0).' hours ('.$nonce_life.' seconds)'); ?>. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature (only for <?php echo($this->get_nicename()); ?>) but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
 
 			<li>In the last option, <em>Ajax Refresh Library in Front-End</em>, you can choose whether to use <a target="_blank" href="http://jquery.com/">jQuery</a> or <a target="_blank" href="http://www.prototypejs.org/">Prototype</a> for the Ajax Refresh in your theme.</li>
 		</ul>
@@ -4005,7 +4059,7 @@ class GeneralStats {
 
 			<li>If you activate <em>Use Action Hooks</em>, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer <em>Cache Time</em>.</li>
 
-			<li><em>Rows at Once</em> is a expert setting of <?php echo($this->get_nicename()); ?>. This option effects the Words_in_* stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
+			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the Words_in_* stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
 
 		</ul>
 	<?php }

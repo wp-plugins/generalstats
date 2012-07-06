@@ -1,9 +1,9 @@
 === GeneralStats ===
 Contributors: neoxx
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=bernhard%40riedl%2ename&item_name=Donation%20for%20GeneralStats&no_shipping=1&no_note=1&tax=0&currency_code=EUR&bn=PP%2dDonationsBF&charset=UTF%2d8
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS
 Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery, prototype
 Requires at least: 2.8
-Tested up to: 3.4
+Tested up to: 3.5
 Stable tag: trunk
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -40,9 +40,9 @@ Please find the version for WordPress
 * 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
 * minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
 
-**Plugin's website:** [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/)
+**Plugin's website:** [http://www.bernhard-riedl.com/projects/](http://www.bernhard-riedl.com/projects/)
 
-**Author's website:** [http://www.bernhard.riedl.name/](http://www.bernhard.riedl.name/)
+**Author's website:** [http://www.bernhard-riedl.com/](http://www.bernhard-riedl.com/)
 
 == Installation ==
 
@@ -54,7 +54,7 @@ Please find the version for WordPress
 
 4. If you have widget functionality just drag and drop GeneralStats on your widget area in the Appearance Menu. Add additional [function and shortcode calls](http://wordpress.org/extend/plugins/generalstats/other_notes/) according to your desires.
 
-5. Be happy and celebrate! (and maybe you want to add a link to [http://www.neotrinity.at/projects/](http://www.neotrinity.at/projects/))
+5. Be happy and celebrate! (and maybe you want to add a link to [http://www.bernhard-riedl.com/projects/](http://www.bernhard-riedl.com/projects/))
 
 == Frequently Asked Questions ==
 
@@ -262,6 +262,12 @@ Array-Structure:
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 2.34 =
+
+* adopted 'Defaults'-string to use WordPress internal i18n
+* updated support section
+* updated project-information
 
 = 2.33 =
 

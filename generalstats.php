@@ -5,14 +5,14 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.34
+Version: 2.35
 Author URI: http://www.bernhard-riedl.com/
 */
 
 /*
-Copyright 2006-2012 Dr. Bernhard Riedl
+Copyright 2006-2013 Dr. Bernhard Riedl
 
-Inspirations & Proof-Reading 2007-2012
+Inspirations & Proof-Reading 2007-2013
 by Veronika Grascher
 
 This program is free software:
@@ -1798,7 +1798,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.34\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.35\"/>\n");
 	}
 
 	/*
@@ -3658,7 +3658,7 @@ class GeneralStats {
 
 		<form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="TGPC4W9DUSWUS"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" style="border:0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" style="border:0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1"></form><br />
 
-		Maybe you also want to <?php if (current_user_can('manage_links')) { ?><a href="link-add.php"><?php } ?>add a link<?php if (current_user_can('manage_links')) { ?></a><?php } ?> to <a target="_blank" href="http://www.bernhard-riedl.com/projects/">http://www.bernhard-riedl.com/projects/</a>.<br /><br />
+		Maybe you also want to <?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?><a href="link-add.php"><?php } ?>add a link<?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?></a><?php } ?> to <a target="_blank" href="http://www.bernhard-riedl.com/projects/">http://www.bernhard-riedl.com/projects/</a>.<br /><br />
 	<?php }
 
 	/*
@@ -3671,7 +3671,15 @@ class GeneralStats {
 
 	function callback_settings_intro() { ?>
 		Welcome to the Settings-Page of <a target="_blank" href="http://www.bernhard-riedl.com/projects/"><?php echo($this->get_nicename()); ?></a>. This plugin counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
-	<?php }
+	<?php
+		/*
+		https://core.trac.wordpress.org/ticket/21307
+		*/
+
+		if ((has_filter('default_option_link_manager_enabled') && !get_option( 'link_manager_enabled'))) {
+			echo('<br />Please note, that the link-manager is optional since WordPress 3.5. - If you want to use links or link-categories stats you have to <a href="'.wp_nonce_url(self_admin_url('update.php?action=install-plugin&plugin=link-manager'), 'install-plugin_link-manager').'">install the Link Manager Plugin</a>.');
+		}
+	}
 
 	/*
 	adds help-text to admin-menu contextual help

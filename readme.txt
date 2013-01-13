@@ -3,7 +3,7 @@ Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS
 Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery, prototype
 Requires at least: 2.8
-Tested up to: 3.5
+Tested up to: 3.6
 Stable tag: trunk
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -69,6 +69,10 @@ Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should
 = Which Javascript library should I choose for the Ajax refresh in my theme? =
 
 That's [a well-covered topic in the web](https://encrypted.google.com/search?q=prototype+vs.+jquery). GeneralStats provides you with the flexibility to use either [Prototype](http://www.prototypejs.org/) or [jQuery](http://jquery.com/). Thus, your decision merely depends on what your other installed plugins use.
+
+= Why do the Links & Link-Categories stats not work? =
+
+In [WordPress 3.5 and higher the Link Manager (aka Blogroll) has been deactivated by default](https://core.trac.wordpress.org/ticket/21307). - In order to re-activate it you need to download the [Link Manager Plugin](http://wordpress.org/extend/plugins/link-manager/).
 
 = Why is the 'Drag and Drop Layout' not working? =
 
@@ -262,6 +266,10 @@ Array-Structure:
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 2.35 =
+* added message to settings-page about link manager
+* made add-link to [link manager for WordPress 3.5 and higher optional](https://core.trac.wordpress.org/ticket/21307)
 
 = 2.34 =
 

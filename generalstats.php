@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 2.35
+Version: 3.00
 Author URI: http://www.bernhard-riedl.com/
 */
 
@@ -118,7 +118,6 @@ class GeneralStats {
 		'use_ajax_refresh' => true,
 		'ajax_refresh_time' => 30,
 		'renew_nonce' => false,
-		'ajax_refresh_lib' => 'jquery',
 
 		'cache_time' => 600,
 		'use_action_hooks' => true,
@@ -151,15 +150,6 @@ class GeneralStats {
 	*/
 
 	private $block_count=0;
-
-	/*
-	ajax refresh libraries for front end
-	*/
-
-	private $ajax_refresh_libs=array(
-		'jquery' => 'jQuery',
-		'prototype' => 'Prototype'
-	);
 
 	/*
 	options-page sections/option-groups
@@ -205,8 +195,7 @@ class GeneralStats {
 			'fields' => array(
 				'use_ajax_refresh' => 'Use Ajax Refresh',
 				'ajax_refresh_time' => 'Ajax Refresh Time',
-				'renew_nonce' => 'Renew nonce to assure continous updates',
-				'ajax_refresh_lib' => 'Ajax Refresh Library in Front-End'
+				'renew_nonce' => 'Renew nonce to assure continous updates'
 			)
 		),
 		'performance' => array(
@@ -277,25 +266,23 @@ class GeneralStats {
 	function register_scripts() {
 
 		/*
-		jshashtable v2.1 by Tim Down
+		jshashtable v3.0 by Tim Down
 		http://www.timdown.co.uk/jshashtable/
 		*/
 
-		wp_register_script('jshashtable', $this->get_plugin_url().'js/jshashtable/jshashtable.js', array(), '2.1');
+		wp_register_script('jshashtable', $this->get_plugin_url().'js/jshashtable/hashtable.js', array(), '3.0');
 
 		/*
 		GeneralStats JS
 		*/
 
-		wp_register_script($this->get_prefix().'refresh_prototype', $this->get_plugin_url().'js/refresh_prototype.js', array('prototype'), '2.30');
+		wp_register_script($this->get_prefix().'refresh', $this->get_plugin_url().'js/refresh.js', array('jquery', 'jshashtable'), '3.00');
 
-		wp_register_script($this->get_prefix().'refresh_jquery', $this->get_plugin_url().'js/refresh_jquery.js', array('jquery', 'jshashtable'), '2.30');
+		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('jquery'), '3.00');
 
-		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('prototype'), '2.00');
+		wp_register_script($this->get_prefix().'drag_and_drop', $this->get_plugin_url().'js/drag_and_drop.js', array('jquery', 'jquery-ui-sortable', 'jquery-effects-highlight', $this->get_prefix().'utils'), '3.00');
 
-		wp_register_script($this->get_prefix().'drag_and_drop', $this->get_plugin_url().'js/drag_and_drop.js', array('prototype', 'scriptaculous-effects', 'scriptaculous-dragdrop', $this->get_prefix().'utils'), '2.00');
-
-		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('prototype', $this->get_prefix().'utils'), '2.00');
+		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('jquery', $this->get_prefix().'drag_and_drop', $this->get_prefix().'utils'), '3.00');
 	}
 
 	/*
@@ -308,15 +295,15 @@ class GeneralStats {
 		register externals
 		*/
 
-		add_action('init', array(&$this, 'register_scripts'));
+		add_action('init', array($this, 'register_scripts'));
 
 		/*
 		general
 		*/
 
-		add_filter('plugin_action_links', array(&$this, 'plugin_action_links'), 10, 2);
+		add_filter('plugin_action_links', array($this, 'plugin_action_links'), 10, 2);
 
-		add_action('admin_menu', array(&$this, 'admin_menu'));
+		add_action('admin_menu', array($this, 'admin_menu'));
 
 		/*
 		ajax refresh calls
@@ -328,14 +315,14 @@ class GeneralStats {
 			include ajax refresh scripts
 			*/
 
-			add_action('wp_print_scripts', array(&$this, 'refresh_print_scripts'));
+			add_action('wp_print_scripts', array($this, 'refresh_print_scripts'));
 
 			/*
 			allowed ajax actions
 			*/
 
-			add_action('wp_ajax_'.$this->get_prefix().'output', array(&$this, 'wp_ajax_refresh'));
-			add_action('wp_ajax_'.$this->get_prefix().'count', array(&$this, 'wp_ajax_refresh'));
+			add_action('wp_ajax_'.$this->get_prefix().'output', array($this, 'wp_ajax_refresh'));
+			add_action('wp_ajax_'.$this->get_prefix().'count', array($this, 'wp_ajax_refresh'));
 
 			/*
 			anonymous ajax refresh requests
@@ -343,8 +330,8 @@ class GeneralStats {
 			*/
 
 			if ($this->get_option('all_users_can_view_stats')) {
-				add_action('wp_ajax_nopriv_'.$this->get_prefix().'output', array(&$this, 'wp_ajax_refresh'));
-				add_action('wp_ajax_nopriv_'.$this->get_prefix().'count', array(&$this, 'wp_ajax_refresh'));
+				add_action('wp_ajax_nopriv_'.$this->get_prefix().'output', array($this, 'wp_ajax_refresh'));
+				add_action('wp_ajax_nopriv_'.$this->get_prefix().'count', array($this, 'wp_ajax_refresh'));
 			}
 		}
 
@@ -352,32 +339,32 @@ class GeneralStats {
 		meta-data
 		*/
 
-		add_action('wp_head', array(&$this, 'head_meta'));
-		add_action('admin_head', array(&$this, 'head_meta'));
+		add_action('wp_head', array($this, 'head_meta'));
+		add_action('admin_head', array($this, 'head_meta'));
 
 		/*
 		widgets
 		*/
 
-		add_action('widgets_init', array(&$this, 'widgets_init'));
+		add_action('widgets_init', array($this, 'widgets_init'));
 
-		add_action('wp_dashboard_setup', array(&$this, 'add_dashboard_widget'));
+		add_action('wp_dashboard_setup', array($this, 'add_dashboard_widget'));
 
-		add_action('activity_box_end', array(&$this, 'add_right_now_box'));
+		add_action('activity_box_end', array($this, 'add_right_now_box'));
 
 		/*
 		shortcodes
 		*/
 
-		add_shortcode($this->get_prefix().'output', array(&$this, 'shortcode_output'));
+		add_shortcode($this->get_prefix().'output', array($this, 'shortcode_output'));
 
-		add_shortcode($this->get_prefix().'count', array(&$this, 'shortcode_count'));
+		add_shortcode($this->get_prefix().'count', array($this, 'shortcode_count'));
 
 		/*
 		scheduled mail
 		*/
 
-		add_action($this->get_prefix().'mail_stats', array(&$this, 'mail_stats'));
+		add_action($this->get_prefix().'mail_stats', array($this, 'mail_stats'));
 
 		/*
 		cache refresh hooks
@@ -390,14 +377,11 @@ class GeneralStats {
 		whitelist options
 		*/
 
-		add_action('admin_init', array(&$this, 'admin_init'));
+		add_action('admin_init', array($this, 'admin_init'));
 	}
 
 	/*
-	add hooks for forcing a cache refresh;
-	unfortunately the list on 	http://codex.wordpress.org/Plugin_API/Action_Reference
-	is not complete, so I walked through the source of
-	WordPress to find the appropriate triggers
+	add hooks for forcing a cache refresh
 	*/
 
 	private function add_cache_refresh_hooks() {
@@ -406,102 +390,76 @@ class GeneralStats {
 		users
 		*/
 
-		add_action('user_register', array(&$this, 'force_user_cache_refresh'));
-		add_action('deleted_user', array(&$this, 'force_user_cache_refresh'));
-		add_action('add_user_to_blog', array(&$this, 'force_user_cache_refresh'));
-		add_action('remove_user_from_blog', array(&$this, 'force_user_cache_refresh'));
+		add_action('user_register', array($this, 'force_user_cache_refresh'));
+		add_action('deleted_user', array($this, 'force_user_cache_refresh'));
+		add_action('add_user_to_blog', array($this, 'force_user_cache_refresh'));
+		add_action('remove_user_from_blog', array($this, 'force_user_cache_refresh'));
 
 		/*
 		user-posts relation
 		*/
 
-		add_action('deleted_user', array(&$this, 'force_post_cache_refresh'));
-		add_action('remove_user_from_blog', array(&$this, 'force_post_cache_refresh'));
+		add_action('deleted_user', array($this, 'force_post_cache_refresh'));
+		add_action('remove_user_from_blog', array($this, 'force_post_cache_refresh'));
 
 		/*
 		user-pages relation
 		*/
 
-		add_action('deleted_user', array(&$this, 'force_page_cache_refresh'));
-		add_action('remove_user_from_blog', array(&$this, 'force_page_cache_refresh'));
-
-		/*
-		user-links relation
-		*/
-
-		add_action('deleted_user', array(&$this, 'force_link_cache_refresh'));
-		add_action('remove_user_from_blog', array(&$this, 'force_link_cache_refresh'));
-
+		add_action('deleted_user', array($this, 'force_page_cache_refresh'));
+		add_action('remove_user_from_blog', array($this, 'force_page_cache_refresh'));
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/extend/plugins/sabre/
+		http://wordpress.org/plugins/sabre/
 		*/
 
-		add_action('sabre_accepted_registration', array(&$this, 'force_user_cache_refresh'));
-		add_action('sabre_cancelled_registration', array(&$this, 'force_user_cache_refresh'));
+		add_action('sabre_accepted_registration', array($this, 'force_user_cache_refresh'));
+		add_action('sabre_cancelled_registration', array($this, 'force_user_cache_refresh'));
 
 		/*
 		posts & pages
 		*/
 
-		add_action('save_post', array(&$this, 'save_post_force_cache_refresh'), 10, 2);
+		add_action('save_post', array($this, 'save_post_force_cache_refresh'), 10, 2);
 
 		/*
 		posts
 		*/
 
-		add_action('after_delete_post', array(&$this, 'force_post_cache_refresh'));
-
-		/*
-		deleted_post has been replaced
-		by after_delete_post
-		in WordPress 3.2
-		*/
-
-		add_action('deleted_post', array(&$this, 'force_post_cache_refresh'));
-
-		add_action('trashed_post', array(&$this, 'force_post_cache_refresh'));
-		add_action('untrashed_post', array(&$this, 'force_post_cache_refresh'));
+		add_action('after_delete_post', array($this, 'force_post_cache_refresh'));
+		add_action('trashed_post', array($this, 'force_post_cache_refresh'));
+		add_action('untrashed_post', array($this, 'force_post_cache_refresh'));
 
 		/*
 		pages
 		*/
 
-		add_action('after_delete_post', array(&$this, 'force_page_cache_refresh'));
-
-		/*
-		deleted_post has been replaced
-		by after_delete_post
-		in WordPress 3.2
-		*/
-
-		add_action('deleted_post', array(&$this, 'force_page_cache_refresh'));
-
-		add_action('trashed_post', array(&$this, 'force_page_cache_refresh'));
-		add_action('untrashed_post', array(&$this, 'force_page_cache_refresh'));
+		add_action('after_delete_post', array($this, 'force_page_cache_refresh'));
+		add_action('trashed_post', array($this, 'force_page_cache_refresh'));
+		add_action('untrashed_post', array($this, 'force_page_cache_refresh'));
 
 		/*
 		comments
 		*/
 
-		add_action('comment_post', array(&$this, 'comment_status_force_cache_refresh'), 10, 2);
-		add_action('edit_comment', array(&$this, 'force_comment_cache_refresh'));
+		add_action('comment_post', array($this, 'comment_status_force_cache_refresh'), 10, 2);
+		add_action('edit_comment', array($this, 'force_comment_cache_refresh'));
 
 		/*
 		deleted/trashed comment can be realized
 		by using wp_set_comment_status
 		*/
 
-		add_action('wp_set_comment_status', array(&$this, 'force_comment_cache_refresh'));
+		add_action('wp_set_comment_status', array($this, 'force_comment_cache_refresh'));
 
 		/*
 		special hooks for trashing/untrashing
 		all comments of a certain post
 		*/
 
-		add_action('trashed_post_comments', array(&$this, 'force_comment_cache_refresh'));
-		add_action('untrashed_post_comments', array(&$this, 'force_comment_cache_refresh'));
+		add_action('trashed_post_comments', array($this, 'force_comment_cache_refresh'));
+		add_action('untrashed_post_comments', array($this, 'force_comment_cache_refresh'));
 
 		/*
 		links
@@ -510,9 +468,9 @@ class GeneralStats {
 		to private or vice-versa
 		*/
 
-		add_action('add_link', array(&$this, 'force_link_cache_refresh')); 
-		add_action('edit_link', array(&$this, 'force_link_cache_refresh'));
-		add_action('deleted_link', array(&$this, 'force_link_cache_refresh'));
+		add_action('add_link', array($this, 'force_link_cache_refresh')); 
+		add_action('edit_link', array($this, 'force_link_cache_refresh'));
+		add_action('deleted_link', array($this, 'force_link_cache_refresh'));
 
 		/*
 		terms (tags, categories & link-categories)
@@ -520,8 +478,8 @@ class GeneralStats {
 		it does not influence the count
 		*/
 
-		add_action('created_term', array(&$this, 'force_term_cache_refresh'), 10, 3);
-		add_action('delete_term', array(&$this, 'force_term_cache_refresh'), 10, 3);
+		add_action('created_term', array($this, 'force_term_cache_refresh'), 10, 3);
+		add_action('delete_term', array($this, 'force_term_cache_refresh'), 10, 3);
 	}
 
 	/*
@@ -933,6 +891,13 @@ class GeneralStats {
 		if (array_key_exists('anonymous_ajax_refresh', $this->options))
 			$this->upgrade_v24();
 
+		/*
+		maybe upgrade to v3.00?
+		*/
+
+		if (array_key_exists('ajax_refresh_lib', $this->options))
+			$this->upgrade_v30();
+
 		$this->log('setting options to '.var_export($this->options, true));
 
 		$this->log('setting defaults to '.var_export($this->defaults, true));
@@ -1056,14 +1021,6 @@ class GeneralStats {
 		if (array_key_exists('rows_at_once', $input))
 			if (!$this->is_integer($input['rows_at_once']) || $input['rows_at_once']<1 || $input['rows_at_once']>10000)
 				$input['rows_at_once']=$this->fallback_options['rows_at_once'];
-
-		/*
-		check ajax_refresh_lib
-		*/
-
-		if (array_key_exists('ajax_refresh_lib', $input))
-			if (!array_key_exists($input['ajax_refresh_lib'], $this->ajax_refresh_libs))
-				$input['ajax_refresh_lib']=$this->fallback_options['ajax_refresh_lib'];
 
 		/*
 		loop through all available stats
@@ -1407,6 +1364,44 @@ class GeneralStats {
 
 		unset($this->options['anonymous_ajax_refresh']);
 
+		/*
+		combine settings-array
+		*/
+
+		$settings=array();
+
+		$settings['stats_selected']=$this->stats_selected;
+		$settings['stats_available']=$this->stats_available;
+		$settings['defaults']=$this->defaults;
+		$settings['options']=$this->options;
+
+		/*
+		store new settings
+		*/
+
+		update_option($this->get_prefix(false), $settings);
+
+		$this->log('upgrade finished. - retrieved options are: '.var_export($settings, true));
+	}
+
+	/*
+	upgrade options to GeneralStats v3.00
+	*/
+
+	private function upgrade_v30() {
+
+		$this->log('upgrade options to '.$this->get_nicename().' v3.00');
+
+		/*
+		remove setting
+		*/
+
+		unset($this->options['ajax_refresh_lib']);
+
+		/*
+		combine settings-array
+		*/
+
 		$settings=array();
 
 		$settings['stats_selected']=$this->stats_selected;
@@ -1506,14 +1501,6 @@ class GeneralStats {
 
 		if ($status<0)
 			trigger_error($message);
-	}
-
-	/*
-	warns about deprecated functions
-	*/
-
-	function deprecated_function($function, $version, $replacement) {
-		$this->log(sprintf( __('%1$s is <strong>deprecated</strong> since '.$this->get_nicename().' version %2$s! Use <strong>$'.$this->get_prefix(false).'->%3$s()</strong> instead.'), $function, $version, $replacement), -2);
 	}
 
 	/*
@@ -1764,11 +1751,11 @@ class GeneralStats {
 	*/
 
 	function admin_init() {
-		register_setting($this->get_prefix(false), $this->get_prefix(false), array(&$this, 'settings_validate'));
+		register_setting($this->get_prefix(false), $this->get_prefix(false), array($this, 'settings_validate'));
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/extend/plugins/sabre/
+		http://wordpress.org/plugins/sabre/
 		*/
 
 		if (defined('SABRE_TABLE'))
@@ -1786,11 +1773,11 @@ class GeneralStats {
 	*/
 
 	function admin_menu() {
-		$options_page=add_options_page($this->get_nicename(), $this->get_nicename(), 'manage_options', $this->get_prefix(false), array(&$this, 'options_page'));
+		$options_page=add_options_page($this->get_nicename(), $this->get_nicename(), 'manage_options', $this->get_prefix(false), array($this, 'options_page'));
 
-		add_action('admin_print_scripts-'.$options_page, array(&$this, 'settings_print_scripts'));
-		add_action('admin_head-'.$options_page, array(&$this, 'admin_styles'));
-		add_action('load-'.$options_page, array(&$this, 'options_page_help_tab'));
+		add_action('admin_print_scripts-'.$options_page, array($this, 'settings_print_scripts'));
+		add_action('admin_head-'.$options_page, array($this, 'admin_styles'));
+		add_action('load-'.$options_page, array($this, 'options_page_help_tab'));
 	}
 
 	/*
@@ -1798,7 +1785,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"2.35\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.00\"/>\n");
 	}
 
 	/*
@@ -1807,7 +1794,7 @@ class GeneralStats {
 
 	function add_dashboard_widget() {
 		if ($this->get_option('dashboard_widget') && current_user_can($this->get_option('dashboard_widget_capability')))
-			wp_add_dashboard_widget($this->get_prefix().'dashboard_widget', $this->get_nicename(), array(&$this, 'dashboard_widget_output'));
+			wp_add_dashboard_widget($this->get_prefix().'dashboard_widget', $this->get_nicename(), array($this, 'dashboard_widget_output'));
 	}
 
 	/*
@@ -1823,7 +1810,7 @@ class GeneralStats {
 		if (!current_user_can($this->get_option('dashboard_widget_capability')))
 			return;
 
-		$this->current_stats_block('dashboard_widget', 'font-size:11px;line-height:140%');
+		$this->current_stats_block('dashboard_widget');
 	}
 
 	/*
@@ -1836,7 +1823,7 @@ class GeneralStats {
 		if ($this->get_option('dashboard_right_now') && current_user_can($this->get_option('dashboard_right_now_capability'))) {
 			echo('<p></p>');
 
-			$this->current_stats_block('dashboard_right_now', 'font-size:11px;line-height:140%');
+			$this->current_stats_block('dashboard_right_now');
 		}
 	}
 
@@ -1862,32 +1849,7 @@ class GeneralStats {
 		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
 			return;
 
-		$ajax_refresh_lib=$this->get_option('ajax_refresh_lib');
-
-		/*
-		for optimization of
-		page-load times,
-		the default Ajax-Library
-		in the Admin Menu is jQuery,
-		but we force Prototype
-		in the Setting Page of
-		GeneralStats
-		because we need Prototype for
-		scriptaculous drag and drop
-		*/
-
-		if (is_admin()) {
-			$ajax_refresh_lib='jquery';
-
-			global $current_screen;
-
-			if ($current_screen->id=='settings_page_'.$this->get_prefix(false))
-				$ajax_refresh_lib='prototype';
-		}
-
-		$ajax_refresh_lib='_'.$ajax_refresh_lib;
-
-		wp_enqueue_script($this->get_prefix().'refresh'.$ajax_refresh_lib);
+		wp_enqueue_script($this->get_prefix().'refresh');
 
 		$security_string=$this->get_prefix().'output';
 		$_ajax_nonce=wp_create_nonce($security_string);
@@ -1900,7 +1862,7 @@ class GeneralStats {
 		$ajax_url=admin_url('admin-ajax.php', is_ssl() ? 'https' : 'http');
 
 		wp_localize_script(
-			$this->get_prefix().'refresh'.$ajax_refresh_lib,
+			$this->get_prefix().'refresh',
 			$this->get_prefix().'refresh_settings',
 			array(
 				'ajax_url' => $ajax_url,
@@ -1916,7 +1878,6 @@ class GeneralStats {
 	*/
 
 	function settings_print_scripts() {
-		wp_enqueue_script($this->get_prefix().'drag_and_drop');
 		wp_enqueue_script($this->get_prefix().'settings_page');
 	}
 
@@ -1980,6 +1941,10 @@ class GeneralStats {
 				cursor : move;
 				padding: 3px 5px 3px 5px;
 				-moz-border-radius: 6px;
+			}
+
+			li.<?php echo($this->get_prefix()); ?>sortablelist_active {
+				border: 1px solid #ffd800;
 			}
 
 			ul.<?php echo($this->get_prefix()); ?>sortablelist {
@@ -2235,14 +2200,14 @@ class GeneralStats {
 
 			/* <![CDATA[ */
 
-			var <?php echo($this->get_prefix()); ?>params_<?php echo($params['id']); ?> = <?php echo($this->get_prefix()); ?>refresh_create_params('<?php echo($this->get_prefix()); ?>block_<?php echo($params['id']); ?>', '<div id="<?php echo($this->get_prefix().'block_'.$params['id']); ?>" class="<?php echo($this->get_prefix(false)); ?>-output"');
+			var <?php echo($this->get_prefix()); ?>params_<?php echo($params['id']); ?>=<?php echo($this->get_prefix()); ?>refresh_create_params('<?php echo($this->get_prefix()); ?>block_<?php echo($params['id']); ?>', '<div id="<?php echo($this->get_prefix().'block_'.$params['id']); ?>" class="<?php echo($this->get_prefix(false)); ?>-output"');
 
 			<?php
 			$security_string=$this->get_prefix().'output'.str_replace(array('\n', "\n"), '', $query_string);
 			$_ajax_nonce=wp_create_nonce($security_string);
 			?>
 
-			var <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?> = <?php echo($this->get_prefix()); ?>refresh_create_query_params_output('<?php echo($_ajax_nonce); ?>', '<?php echo($query_string); ?>');
+			var <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?>=<?php echo($this->get_prefix()); ?>refresh_create_query_params_output('<?php echo($_ajax_nonce); ?>', '<?php echo($query_string); ?>');
 
 			<?php echo($this->get_prefix()); ?>initiate_refresh(<?php echo($this->get_prefix()); ?>params_<?php echo($params['id']); ?>, <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?>);
 
@@ -2395,7 +2360,7 @@ class GeneralStats {
 			$_ajax_nonce=wp_create_nonce($security_string);
 			?>
 
-			var <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?> = <?php echo($this->get_prefix()); ?>refresh_create_query_params_count('<?php echo($_ajax_nonce); ?>', '<?php echo($query_string); ?>');
+			var <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?>=<?php echo($this->get_prefix()); ?>refresh_create_query_params_count('<?php echo($_ajax_nonce); ?>', '<?php echo($query_string); ?>');
 
 			<?php echo($this->get_prefix()); ?>initiate_refresh(<?php echo($this->get_prefix()); ?>params_<?php echo($params['id']); ?>, <?php echo($this->get_prefix()); ?>query_params_<?php echo($params['id']); ?>);
 
@@ -2551,7 +2516,7 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/extend/plugins/sabre/
+		http://wordpress.org/plugins/sabre/
 		*/
 
 		if ($stat==0 && defined('SABRE_TABLE'))
@@ -2579,7 +2544,7 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/extend/plugins/sabre/
+		http://wordpress.org/plugins/sabre/
 		*/
 
 		if ($stat==0 && defined('SABRE_TABLE'))
@@ -2656,7 +2621,7 @@ class GeneralStats {
 				decode html
 				*/
 
-				$comment_text=html_entity_decode($results[$i], ENT_QUOTES);
+				$text=html_entity_decode($results[$i], ENT_QUOTES);
 
 				/*
 				remove line-breaks
@@ -2669,7 +2634,7 @@ class GeneralStats {
 					'<br/>'
 				);
 
-				$comment_text=str_replace($br_variants, ' ', $comment_text);
+				$text=str_replace($br_variants, ' ', $text);
 
 				/*
 				remove html tags if option
@@ -2677,9 +2642,9 @@ class GeneralStats {
 				*/
 
 				if (!$this->get_option('count_html_tags'))
-					$comment_text=wp_strip_all_tags($comment_text);
+					$text=wp_strip_all_tags($text);
 
-				$result+=str_word_count($comment_text);
+				$result+=str_word_count($text);
 			}
 
 			$this->log('subtotal for '.$this->get_stat_name($stat).'='.$result);
@@ -3021,12 +2986,8 @@ class GeneralStats {
 	output current stats-block
 	*/
 
-	private function current_stats_block($filter, $format_container='') {
-		$unfiltered_params=array(
-			'format_container' => $format_container
-		);
-
-		$filtered_params=apply_filters($this->get_prefix().$filter, $unfiltered_params);
+	private function current_stats_block($filter) {
+		$filtered_params=apply_filters($this->get_prefix().$filter, array());
 
 		$params=array(
 			'use_container' => true,
@@ -3063,13 +3024,6 @@ class GeneralStats {
 			*/
 
 			if (wp_is_post_autosave($post)>0)
-				return;
-
-			/*
-			check post status
-			*/
-
-			if ($post->post_status!='publish')
 				return;
 
 			/*
@@ -3263,7 +3217,7 @@ class GeneralStats {
 	*/
 
 	private function add_settings_section($section_key, $section_name, $section_prefix, $callback) {
-		add_settings_section('default', $section_name, array(&$this, 'callback_'.$section_prefix.'_'.$callback), $this->get_prefix().$section_prefix.'_'.$section_key);
+		add_settings_section('default', $section_name, array($this, 'callback_'.$section_prefix.'_'.$callback), $this->get_prefix().$section_prefix.'_'.$section_key);
 	}
 
 	/*
@@ -3274,7 +3228,7 @@ class GeneralStats {
 		if (empty($label_for))
 			$label_for=$this->get_prefix().$field_key;
 
-		add_settings_field($this->get_prefix().$field_key, $field_name, array(&$this, 'setting_'.$field_key), $this->get_prefix().$section_prefix.'_'.$section_key, 'default', array('label_for' => $label_for));
+		add_settings_field($this->get_prefix().$field_key, $field_name, array($this, 'setting_'.$field_key), $this->get_prefix().$section_prefix.'_'.$section_key, 'default', array('label_for' => $label_for));
 	}
 
 	/*
@@ -3338,26 +3292,13 @@ class GeneralStats {
 	private function add_help_tab($help_text) {
 		$current_screen=get_current_screen();
 
-		/*
-		WP >= 3.0
-		*/
+		$help_options=array(
+			'id' => $this->get_prefix(),
+			'title' => $this->get_nicename(),
+			'content' => $help_text
+		);
 
-		if (!method_exists($current_screen, 'add_help_tab'))
-			add_contextual_help($current_screen, $help_text);
-
-		/*
-		WP >= 3.3
-		*/
-
-		else {
-			$help_options=array(
-				'id' => $this->get_prefix(),
-				'title' => $this->get_nicename(),
-				'content' => $help_text
-			);
-
-			$current_screen->add_help_tab($help_options);
-		}
+		$current_screen->add_help_tab($help_options);
 	}
 
 	/*
@@ -3381,7 +3322,7 @@ class GeneralStats {
 		<?php if (function_exists('screen_icon')) screen_icon(); ?>
 		<h2><?php echo($this->get_nicename()); ?></h2>
 
-		<?php call_user_func(array(&$this, 'callback_'.$section_prefix.'_intro')); ?>
+		<?php call_user_func(array($this, 'callback_'.$section_prefix.'_intro')); ?>
 
 		<div id="<?php echo($this->get_prefix()); ?>menu" style="display:none"><ul class="subsubsub <?php echo($this->get_prefix(false)); ?>">
 		<?php
@@ -3401,15 +3342,14 @@ class GeneralStats {
 
 		/* <![CDATA[ */
 
-		if ($('<?php echo($this->get_prefix()); ?>content'))
-			$('<?php echo($this->get_prefix()); ?>content').style.display="none";
+		jQuery('#<?php echo($this->get_prefix()); ?>content').css('display', 'none');
 
 		/* ]]> */
 
 		</script>
 
 		<?php if ($is_wp_options) { ?>
-			<form method="post" action="<?php echo(admin_url('options.php')); ?>">
+			<form id="<?php echo($this->get_prefix().'form_settings'); ?>" method="post" action="<?php echo(admin_url('options.php')); ?>">
 			<?php settings_fields($this->get_prefix(false));
 		}
 
@@ -3448,7 +3388,7 @@ class GeneralStats {
 		JAVASCRIPT
 		*/ ?>
 
-		<?php $this->settings_page_js($settings_sections); ?>
+		<?php $this->settings_page_js($settings_sections, $is_wp_options); ?>
 
 	<?php }
 
@@ -3456,7 +3396,7 @@ class GeneralStats {
 	settings pages's javascript
 	*/
 
-	private function settings_page_js($settings_sections) { ?>
+	private function settings_page_js($settings_sections, $is_wp_options) { ?>
 
 	<script type="text/javascript">
 
@@ -3466,7 +3406,7 @@ class GeneralStats {
 	section-divs
 	*/
 
-	var <?php echo($this->get_prefix()); ?>sections = [<?php
+	var <?php echo($this->get_prefix()); ?>sections=[<?php
 
 	$available_sections=array();
 
@@ -3476,21 +3416,53 @@ class GeneralStats {
 	echo(implode(',', $available_sections));
 	?>];
 
-	var section=$('<?php echo($this->get_prefix()); ?>section').value;
-	if (!section)
-		section='';
-
-	<?php echo($this->get_prefix()); ?>open_section(section);
-
 	/*
 	display js-menu and content-block
 	if js has been disabled,
 	the menu will not be visible
 	*/
 
-	$('<?php echo($this->get_prefix()); ?>menu').style.display="block";
+	jQuery(document).ready(function() {
+		var section=jQuery('#<?php echo($this->get_prefix()); ?>section').val();
 
-	$('<?php echo($this->get_prefix()); ?>content').style.display="block";
+		if (!section)
+			section='';
+
+		<?php echo($this->get_prefix()); ?>open_section(section);
+
+		jQuery('#<?php echo($this->get_prefix()); ?>menu').css('display', 'block');
+		jQuery('#<?php echo($this->get_prefix()); ?>content').css('display', 'block');
+	});
+
+	<?php if ($is_wp_options) { ?>
+
+	/*
+	submit only without errors
+	*/
+
+	jQuery('#<?php echo($this->get_prefix().'form_settings'); ?>').submit(function (e) {
+		if (jQuery('#<?php echo($this->get_prefix().'form_settings'); ?>').find('.error').length>0) {
+			if (e.preventDefault)
+				e.preventDefault();
+			else
+				e.returnValue=false;
+		}
+	});
+
+	/*
+	disable buttons on error
+	*/
+
+	jQuery('#<?php echo($this->get_prefix().'form_settings'); ?> input:text').keyup(function (e) {
+		var submit_elements=jQuery('#<?php echo($this->get_prefix().'form_settings'); ?> :submit');
+
+		if (jQuery('#<?php echo($this->get_prefix().'form_settings'); ?>').find('.error').length>0)
+			submit_elements.prop('disabled', true);
+		else
+			submit_elements.prop('disabled', false);
+	});
+
+	<?php } ?>
 
 	/* ]]> */
 
@@ -3534,7 +3506,7 @@ class GeneralStats {
 
 			/*
 			check for disabled fields
-			on onload event
+			on document ready
 			*/
 
 			?>
@@ -3543,7 +3515,7 @@ class GeneralStats {
 
 			/* <![CDATA[ */
 
-			Event.observe(window, 'load', function(e){ <?php echo($javascript_toggle.'$(\''.$this->get_prefix().$name.'\')'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');'); ?> });
+			jQuery(document).ready(function() { <?php echo($javascript_toggle.'jQuery(\'#'.$this->get_prefix().$name.'\')'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');'); ?> });
 
 			/* ]]> */
 
@@ -3555,7 +3527,7 @@ class GeneralStats {
 			build trigger for settings_field
 			*/
 
-			$javascript_onclick_related_fields='onclick="'.$javascript_toggle.'this'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');"';
+			$javascript_onclick_related_fields='onclick="'.$javascript_toggle.'jQuery(this)'.$javascript_fields. ', '.($js_checked == 1 ? '1' : '0').');"';
 		}
 
 		$checked=$this->get_setting_default_value($name, $type); ?>
@@ -3640,7 +3612,7 @@ class GeneralStats {
 
 		?><label for="<?php echo($this->get_prefix()."stat_pos_".$key); ?>">Position</label>
 
-		<?php $this->setting_textfield('stat_pos_'.$key, 'stat_pos', 2, 'onblur="if (this.value.length) '.$this->get_prefix().'check_integer(this, 1, 99);"'); ?>
+		<?php $this->setting_textfield('stat_pos_'.$key, 'stat_pos', 2); ?>
 
 		<label for="<?php echo($this->get_prefix().'stat_desc_'.$key); ?>">Description</label>
 
@@ -3654,9 +3626,9 @@ class GeneralStats {
 	private function support() {
 		global $user_identity; ?>
 		<h3>Support</h3>
-		<?php echo($user_identity); ?>, if you would like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
+		<?php echo($user_identity); ?>, if you would like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
 
-		<form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="TGPC4W9DUSWUS"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" style="border:0" name="submit" alt="PayPal - The safer, easier way to pay online!"><img alt="" style="border:0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1"></form><br />
+		<a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" alt="Donate to <?php echo($this->get_nicename()); ?>" /></a><br /><br />
 
 		Maybe you also want to <?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?><a href="link-add.php"><?php } ?>add a link<?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?></a><?php } ?> to <a target="_blank" href="http://www.bernhard-riedl.com/projects/">http://www.bernhard-riedl.com/projects/</a>.<br /><br />
 	<?php }
@@ -3688,7 +3660,7 @@ class GeneralStats {
 	function options_page_help() {
 		return "<div class=\"".$this->get_prefix()."wrap\"><ul>
 
-			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Layout Section')." or in the ".$this->get_section_link($this->options_page_sections, 'expert', 'Expert Section').". Latter section also works without the usage of Javascript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
+			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Layout Section')." or in the ".$this->get_section_link($this->options_page_sections, 'expert', 'Expert Section').". Latter section also works without the usage of JavaScript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
 
 			<li>Style-customizations can be made in the ".$this->get_section_link($this->options_page_sections, 'format', 'Format Section').".</li>
 
@@ -3700,11 +3672,11 @@ class GeneralStats {
 
 			<li>Finally, you can publish the previously selected and saved stats either by adding a <a href=\"widgets.php\">Sidebar Widget</a> or by enabling the ".$this->get_section_link($this->options_page_sections, 'dashboard', 'Dashboard Widget').".</li>
 
-			<li><a target=\"_blank\" href=\"http://wordpress.org/extend/plugins/generalstats/other_notes/\">Geek stuff</a>: You can output your stat-selection by calling the <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function <code>$".$this->get_prefix(false)."->output(\$params)</code> or <code>$".$this->get_prefix(false)."->count(\$params)</code> wherever you like (don't forget <code>global $".$this->get_prefix(false)."</code>). These functions can also be invoked by the usage of shortcodes.</li>
+			<li><a target=\"_blank\" href=\"http://wordpress.org/plugins/generalstats/other_notes/\">Geek stuff</a>: You can output your stat-selection by calling the <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function <code>$".$this->get_prefix(false)."->output(\$params)</code> or <code>$".$this->get_prefix(false)."->count(\$params)</code> wherever you like (don't forget <code>global $".$this->get_prefix(false)."</code>). These functions can also be invoked by the usage of shortcodes.</li>
 
 			<li>If you decide to uninstall ".$this->get_nicename().", firstly remove the optionally added <a href=\"widgets.php\">Sidebar Widget</a>, integrated <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function or WordPress shortcode call(s). Afterwards, disable and delete ".$this->get_nicename()." in the <a href=\"plugins.php\">Plugins Tab</a>.</li>
 
-			<li><strong>For more information:</strong><br /><a target=\"_blank\" href=\"http://wordpress.org/extend/plugins/".str_replace('_', '-', $this->get_prefix(false))."/\">".$this->get_nicename()." in the WordPress Plugin Directory</a></li>
+			<li><strong>For more information:</strong><br /><a target=\"_blank\" href=\"http://wordpress.org/plugins/".str_replace('_', '-', $this->get_prefix(false))."/\">".$this->get_nicename()." in the WordPress Plugin Directory</a></li>
 
 		</ul></div>";
 	}
@@ -3758,7 +3730,7 @@ class GeneralStats {
 			add stat to list-selected
 			*/
 
-			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).$after_tag."\n";
+			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
 		}
 
 		/*
@@ -3780,7 +3752,7 @@ class GeneralStats {
 			add stat to list-available
 			*/
 
-			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).$after_tag."\n";
+			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'<span>'.$after_tag."\n";
 		}
 
 		/*
@@ -3791,11 +3763,11 @@ class GeneralStats {
 		$list_available_listeners='';
 
 		foreach ($this->stats_selected as $key => $stat) {
-			$list_selected_listeners.="Event.observe('".$before_key.$key."', 'click', function(e){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
+			$list_selected_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
 		}
 
 		foreach ($this->stats_available as $key => $stat) {
-			$list_available_listeners.="Event.observe('".$before_key.$key."', 'click', function(e){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
+			$list_available_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
 		}
 
 		/*
@@ -3830,8 +3802,6 @@ class GeneralStats {
 				<input id="<?php echo($this->get_prefix()); ?>edit_text" type="text" size="25" maxlength="30" />
 			</div>
 
-			<div id="<?php echo($this->get_prefix()); ?>edit_success_label" style="display:none; margin:5px; font-weight:bold">Successfully adopted!</div>
-
 			<div id="<?php echo($this->get_prefix()); ?>edit_submit">
 				<input class="button-secondary" type="button" id="<?php echo($this->get_prefix()); ?>edit_change" value="Change" />
 				<input class="button-secondary" type="button" id="<?php echo($this->get_prefix()); ?>edit_default" value="Default" />
@@ -3862,8 +3832,8 @@ class GeneralStats {
 
 	/* <![CDATA[ */
 
-	var <?php echo($this->get_prefix()); ?>keys = [<?php echo(implode(',', array_keys($this->stats))); ?>];
-	var <?php echo($this->get_prefix()); ?>fields = [<?php
+	var <?php echo($this->get_prefix()); ?>keys=[<?php echo(implode(',', array_keys($this->stats))); ?>];
+	var <?php echo($this->get_prefix()); ?>fields=[<?php
 
 	$all_stats=array();
 
@@ -3879,9 +3849,9 @@ class GeneralStats {
 	register listeners for buttons
 	*/
 
-	Event.observe('<?php echo($this->get_prefix()); ?>edit_change', 'click', function(e){ <?php echo($this->get_prefix()); ?>change_entry(); });
+	jQuery('#<?php echo($this->get_prefix()); ?>edit_change').click(function(){ <?php echo($this->get_prefix()); ?>change_entry(); });
 
-	Event.observe('<?php echo($this->get_prefix()); ?>edit_default', 'click', function(e){ <?php echo($this->get_prefix()); ?>populate_drag_and_drop_default(); });
+	jQuery('#<?php echo($this->get_prefix()); ?>edit_default').click(function(){ <?php echo($this->get_prefix()); ?>populate_drag_and_drop_default(); });
 
 	/*
 	register listeners for lists
@@ -3889,6 +3859,23 @@ class GeneralStats {
 
 	<?php echo($list_selected_listeners."\n"); ?>
 	<?php echo($list_available_listeners."\n"); ?>
+
+	/*
+	register listeners for text-inputs
+	*/
+
+	jQuery('#<?php echo($this->get_prefix()); ?>edit').keypress(function(e){
+		var keycode=(e.keyCode ? e.keyCode : e.which);
+
+		if (keycode==13) {
+			if (e.preventDefault)
+				e.preventDefault();
+			else
+				e.returnValue=false;
+
+			<?php echo($this->get_prefix()); ?>change_entry();
+		}
+	});
 
 	/* ]]> */
 
@@ -4016,9 +4003,7 @@ class GeneralStats {
 
 			<li>As all stats are retrieved from the server on every refresh, a <em>Ajax Refresh Time</em> of one second is mostly not realizable for the average server out there. Moreover, please remember that every update causes bandwith usage for your readers and your server.</li>
 
-			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. In your installation, the nonce-life-time is defined as <?php $nonce_life=apply_filters('nonce_life', 86400); echo(number_format((float) ($nonce_life/3600), 0).' hours ('.$nonce_life.' seconds)'); ?>. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature (only for <?php echo($this->get_nicename()); ?>) but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
-
-			<li>In the last option, <em>Ajax Refresh Library in Front-End</em>, you can choose whether to use <a target="_blank" href="http://jquery.com/">jQuery</a> or <a target="_blank" href="http://www.prototypejs.org/">Prototype</a> for the Ajax Refresh in your theme.</li>
+			<li>Due to security reasons, the time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates will be limited by default. In your installation, the nonce-life-time is defined as <?php $nonce_life=apply_filters('nonce_life', 86400); echo(number_format((float) ($nonce_life/3600), 2).' hours ('.$nonce_life.' seconds)'); ?>. If you activate <em>Renew nonce to assure continous updates</em> you override this security feature (only for <?php echo($this->get_nicename()); ?>) but provide unlimited time for <abbr title="asynchronous JavaScript and XML">Ajax</abbr> updates of your stats.</li>
 		</ul>
 	<?php }
 
@@ -4031,27 +4016,10 @@ class GeneralStats {
 	}
 
 	function setting_ajax_refresh_time($params=array()) {
-		$this->setting_textfield('ajax_refresh_time', 'options', 4, 'onblur="'.$this->get_prefix().'check_integer(this, 1, 3600);"');
+		$this->setting_textfield('ajax_refresh_time', 'options', 4, 'onkeyup="'.$this->get_prefix().'check_integer(jQuery(this), 1, 3600);"');
 	}
 	function setting_renew_nonce($params=array()) {
 		$this->setting_checkfield('renew_nonce', 'options');
-	}
-
-	function setting_ajax_refresh_lib($params=array()) {
-		?><select <?php echo($this->get_setting_name_and_id('ajax_refresh_lib')); ?>>
-
-			<?php
-			$ret_val='';
-
-			foreach ($this->ajax_refresh_libs as $key => $ajax_refresh_lib) {
-				$_selected = $key == $this->get_setting_default_value('ajax_refresh_lib', 'options') ? " selected='selected'" : '';
-				$ret_val.="\t<option value='".$key."'".$_selected.">" . $ajax_refresh_lib . "</option>\n";
-			}
-
-			echo $ret_val;
-			?>
-
-		</select><?php
 	}
 
 	/*
@@ -4067,13 +4035,13 @@ class GeneralStats {
 
 			<li>If you activate <em>Use Action Hooks</em>, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer <em>Cache Time</em>.</li>
 
-			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the Words_in_* stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/extend/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
+			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the Words_in_* stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
 
 		</ul>
 	<?php }
 
 	function setting_cache_time($params=array()) {
-		$this->setting_textfield('cache_time', 'options', 5, 'onblur="'.$this->get_prefix().'check_integer(this, 0, 86400);"');
+		$this->setting_textfield('cache_time', 'options', 5, 'onkeyup="'.$this->get_prefix().'check_integer(jQuery(this), 0, 86400);"');
 	}
 
 	function setting_use_action_hooks($params=array()) {
@@ -4081,7 +4049,7 @@ class GeneralStats {
 	}
 
 	function setting_rows_at_once($params=array()) {
-		$this->setting_textfield('rows_at_once', 'options', 5, 'onblur="'.$this->get_prefix().'check_integer(this, 1, 10000);"');
+		$this->setting_textfield('rows_at_once', 'options', 5, 'onkeyup="'.$this->get_prefix().'check_integer(jQuery(this), 1, 10000);"');
 	}
 
 	/*
@@ -4126,7 +4094,7 @@ class GeneralStats {
 				echo(' Next mail will be sent on: '.gmdate($date_format.' '.$time_format, $cron_timestamp));
 			} ?></li>
 
-			<li>If you select to <em>Include HTML-Tags in Word-Counts</em>, not only 'real text' but also HTML and Javascript tags will be counted.</li>
+			<li>If you select to <em>Include HTML-Tags in Word-Counts</em>, not only 'real text' but also HTML and JavaScript tags will be counted.</li>
 
 			<li>If you want to keep the stats as a secret, you can deactivate <em>All users can view stats</em>. In that case, only users with the <em><a target="_blank" href="http://codex.wordpress.org/Roles_and_Capabilities">Capability</a> to view stats</em> can access this information.</li>
 
@@ -4296,7 +4264,7 @@ class WP_Widget_GeneralStats extends WP_Widget {
 	constructor
 	*/
 
-	function WP_Widget_GeneralStats() {
+	function __construct() {
 		global $generalstats;
 
 		$widget_ops = array(
@@ -4304,7 +4272,7 @@ class WP_Widget_GeneralStats extends WP_Widget {
 			'description' => 'Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.'
 		);
 
-		$this->WP_Widget($generalstats->get_prefix(false), $generalstats->get_nicename(), $widget_ops);
+		parent::__construct($generalstats->get_prefix(false), $generalstats->get_nicename(), $widget_ops);
 	}
 
 	/*
@@ -4433,45 +4401,3 @@ function generalstats_uninstall() {
 	}
 
 register_uninstall_hook(__FILE__, 'generalstats_uninstall');
-
-/*
-BACKPORTED
-*/
-
-if (!function_exists('wp_strip_all_tags')) {
-
-	/*
-	backport of wp_strip_all_tags
-	for WP < 2.9.0
-	*/
-
-	function wp_strip_all_tags($string, $remove_breaks = false) {
-		$string = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $string );
-		$string = strip_tags($string);
-
-		if ( $remove_breaks )
-			$string = preg_replace('/[\r\n\t ]+/', ' ', $string);
-
-		return trim($string);
-	}
-
-}
-
-/*
-DEPRECATED FUNCTION
-*/
-
-function GeneralStatsComplete() {
-	global $generalstats;
-
-	$generalstats->deprecated_function(__FUNCTION__, '2.00', 'output');
-
-	$params=array(
-		'use_container' => true,
-		'display' => true
-	);
-
-	$generalstats->output($params);
-}
-
-?>

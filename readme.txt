@@ -1,9 +1,9 @@
 === GeneralStats ===
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS
-Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery, prototype
-Requires at least: 2.8
-Tested up to: 3.6
+Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery
+Requires at least: 3.3
+Tested up to: 3.8
 Stable tag: trunk
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,30 +12,22 @@ Counts the number of users, categories, posts, comments, pages, links, tags, lin
 
 == Description ==
 
-Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
-
-**starting from version 2.00 with a new API and enhanced Ajax functionality**
-
 * fully optionpage-configurable
 * easy to integrate (ships with multi/sidebar- and dashboard-widget functionality)
 * possible to integrate in "Right Now" box or to display as widget on the dashboard
 * high performing with caching technology and customizable memory usage
-* optional Ajax refresh (jQuery or Prototype)
+* optional Ajax refresh with jQuery
 * fully compatible with [https/SSL/TLS-sites](http://codex.wordpress.org/Administration_Over_SSL)
 * stats-update by e-mail
 * drag and drop admin menu page
-* fully WP 3.0 multi-site network compatible
+* [API for developers](http://wordpress.org/plugins/generalstats/other_notes/)
+* fully multisite network compatible
 * clean uninstall
-* collaborates with [Sabre](http://wordpress.org/extend/plugins/sabre/) on user counts
-
-Requirements for current version:
-
-* PHP 5 or higher (find the version for PHP 4 [here](http://downloads.wordpress.org/plugin/generalstats.php4.zip))
-* You can check your PHP version with the [Health Check](http://wordpress.org/extend/plugins/health-check/) plugin.
 
 Please find the version for WordPress
 
-* 2.8 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
+* 3.3 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
+* 2.8 to 3.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.8-3.2.zip)
 * 2.3 to 2.7 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.3-2.7.zip)
 * 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
 * minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
@@ -52,7 +44,7 @@ Please find the version for WordPress
 
 3. Navigate to the Settings/GeneralStats tab and customize the stats according to your desires.
 
-4. If you have widget functionality just drag and drop GeneralStats on your widget area in the Appearance Menu. Add additional [function and shortcode calls](http://wordpress.org/extend/plugins/generalstats/other_notes/) according to your desires.
+4. If you have widget functionality just drag and drop GeneralStats on your widget area in the Appearance Menu. Add additional [function and shortcode calls](http://wordpress.org/plugins/generalstats/other_notes/) according to your desires.
 
 5. Be happy and celebrate! (and maybe you want to add a link to [http://www.bernhard-riedl.com/projects/](http://www.bernhard-riedl.com/projects/))
 
@@ -62,36 +54,17 @@ Please find the version for WordPress
 
 Some attributes, especially the ones which count `words in ...`, need more memory and CPU-time to be executed.
 
-For performance optimization, you can play around with the `Rows at Once` parameter in the `Performance` tab, which represents the number of database rows processed at once. In other words, if your weblog consists of 1,200 comments and you want to count the words in comments with a `Rows at once` value set to 100, it will take 12 sql-queries. This may be much or less, depending on your provider's environment and the size of your weblog. Hence, this setting cannot be automatically calculated because it is not predictable. So, it is up to you to optimize this setting.
+For performance optimization, you can play around with the `Rows at Once` parameter in the `Performance` tab, which represents the number of database rows processed at once. In other words, if your weblog consists of 1,200 comments and you want to count the words in comments with a `Rows at once` value set to 100, it will take 12 sql-queries. This may be much or less, depending on your provider's environment and the size of your weblog. Hence, this setting cannot be automatically calculated because it is not easily predictable. So, it is up to you to optimize this setting.
 
 Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should be appropriate.
 
-= Which Javascript library should I choose for the Ajax refresh in my theme? =
-
-That's [a well-covered topic in the web](https://encrypted.google.com/search?q=prototype+vs.+jquery). GeneralStats provides you with the flexibility to use either [Prototype](http://www.prototypejs.org/) or [jQuery](http://jquery.com/). Thus, your decision merely depends on what your other installed plugins use.
-
 = Why do the Links & Link-Categories stats not work? =
 
-In [WordPress 3.5 and higher the Link Manager (aka Blogroll) has been deactivated by default](https://core.trac.wordpress.org/ticket/21307). - In order to re-activate it you need to download the [Link Manager Plugin](http://wordpress.org/extend/plugins/link-manager/).
+In [WordPress 3.5 and higher the Link Manager (aka Blogroll) has been deactivated by default](https://core.trac.wordpress.org/ticket/21307). - In order to re-activate it you need to download the [Link Manager Plugin](http://wordpress.org/plugins/link-manager/).
 
 = Why is the 'Drag and Drop Layout' not working? =
 
-This section is based on Javascript. Thus, you have to enable Javascript in your browser (this is a default setting in a modern browser like [Firefox](http://www.mozilla.org/firefox?WT.mc_id=aff_en01&WT.mc_ev=click)). GeneralStats is still fully functional without these constraints, but you need to customize your stats manually as in older versions of GeneralStats.
-
-= How can I adopt the color scheme in the GeneralStats Settings Tab? =
-
-If you select one of the two default color schemes (`classic = Blue` or `fresh = Gray`) in your Profile Page, GeneralStats automatically adopts its colors to this scheme.
-
-In case you use a custom color scheme, this cannot be done automatically because WordPress still doesn't provide any proper functions to find out which colors of your scheme are used for background, font, etc. - Nevertheless, you can set up your preferred colors manually: Just add the [filter](http://codex.wordpress.org/Function_Reference/add_filter) `generalstats_available_admin_colors` in for example generalstats.php or in your custom-colors-plugin.
-
-= Is there anything I need to know before updating to GeneralStats v2? =
-
-As the majority of the source-code changed with version 2.00, there are two things I would like to mention:
-
-- Your 1.x options will be automatically converted. - Nevertheless, you should make a backup prior to this upgrade!
-- `GeneralStatsComplete()` has been deprecated in favor of `$generalstats->output()`
-
-As I've excluded HTML-tags with version 2 of GeneralStats by default, you might experience a change in your Word-Count stats. - If you like to re-include these tags and count them as words, you can turn on the setting "Include HTML-Tags in Word-Counts" in the "Administrative Options" section.
+This section is based on JavaScript. Thus, you have to enable JavaScript in your browser (this is a default setting in modern browsers like [Mozilla Firefox](http://en.wikipedia.org/wiki/Firefox) or [Google Chrome](http://en.wikipedia.org/wiki/Google_Chrome)). GeneralStats is still fully functional without JavaScript, but you need to customize your stats manually.
 
 == Other Notes ==
 
@@ -261,11 +234,30 @@ Array-Structure:
 
 == Upgrade Notice ==
 
+= 3.00 =
+
+This is a general code clean-up. - Please note that for GeneralStats v3.00 you need at minimum WordPress 3.3.
+
 = 2.00 =
 
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 3.00 =
+* changed settings-page to jQuery
+* improved usability
+* discontinued support for Prototype
+* updated jshashtable to 3.0
+* removed legacy-code -> minimum-version of WordPress necessary is now 3.3
+* removed option ajax_refresh_lib
+* removed deprecated function GeneralStatsComplete()
+* applied PHP 5 constructor in widget
+* tested with PHP 5.4
+* removed PHP closing tag before EOF
+* removed reference sign on function calls
+* adopted plugin-links to the new structure of wordpress.org
+* cleaned-up code
 
 = 2.35 =
 * added message to settings-page about link manager
@@ -294,7 +286,7 @@ This is not only a feature but also a security update. - Thus, I'd strongly reco
 = 2.30 =
 
 * revised the security model (replaced option `Allow anonymous Ajax Refresh Requests` with `All users can view stats` and added the option `Capability to view stats` to define the capability of a certain user to access the stats)
-* de-coupling of Ajax-refresh-functions and output of `wp_localize_script` (GeneralStats is now compatible with [WP Minify](http://wordpress.org/extend/plugins/wp-minify/))
+* de-coupling of Ajax-refresh-functions and output of `wp_localize_script` (GeneralStats is now compatible with [WP Minify](http://wordpress.org/plugins/wp-minify/))
 * small enhancements
 
 = 2.20 =

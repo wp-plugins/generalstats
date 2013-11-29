@@ -1,86 +1,39 @@
 /*
-moves an element in a drag and drop list
+moves an element
+in a list
 one position up
-
-modified by Nikk Folts, http://www.nikkfolts.com/
 */
 
-function generalstats_move_element_up_for_list(list, row) {
-	return generalstats_move_row(list, row, 1);
+function generalstats_move_element_up(row) {
+
+	/*
+	move the element up
+	*/
+
+	var current=jQuery('#generalstats_stat_'+row);
+	current.prev().before(current);
+
+	/*
+	update the lists
+	*/
+
+	generalstats_update_drag_and_drop_lists();
 }
 
 /*
-moves an element in a drag and drop list
+moves an element
+in a list
 one position down
-
-modified by Nikk Folts, http://www.nikkfolts.com/
 */
 
-function generalstats_move_element_down_for_list(list, row) {
-	return generalstats_move_row(list, row, -1);
-}
-
-/*
-moves an element in a drag and drop list
-one position
-
-modified by Nikk Folts, http://www.nikkfolts.com/
-*/
-
-function generalstats_move_row(list, row, dir) {
-	var sequence=Sortable.sequence(list);
-	var found=false;
+function generalstats_move_element_down(row) {
 
 	/*
-	move only, if there is more than
-	one element in the list
+	move the element down
 	*/
 
-	if (sequence.length>1) for (var j=0; j<sequence.length; j++) {
-
-		/*
-		element found
-		*/
-
-		if (sequence[j]==row) {
-			found=true;
-
-			var i = j - dir;
-
-			if (i >= 0 && i <= sequence.length) {
-				var temp=sequence[i];
-				sequence[i]=row;
-				sequence[j]=temp;
-				break;
-			}
-		}
-	}
-
-	Sortable.setSequence(list, sequence);
-
-	return found;
-}
-
-/*
-handles moving up for both lists
-*/
-
-function generalstats_move_element_up(key) {
-
-	/*
-	try to move the element in first list
-	*/
-
-	if (generalstats_move_element_up_for_list('generalstats_list_selected', key)===false) {
-
-		/*
-		if we didn't find it, try
-		to move the element in the
-		second list
-		*/
-
-		generalstats_move_element_up_for_list('generalstats_list_available', key);
-	}
+	var current=jQuery('#generalstats_stat_'+row);
+	current.next().after(current);
 
 	/*
 	update the lists
@@ -90,58 +43,35 @@ function generalstats_move_element_up(key) {
 }
 
 /*
-handles moving down for both lists
-*/
-
-function generalstats_move_element_down(key) {
-
-	/*
-	try to move the element in first list
-	*/
-
-	if (generalstats_move_element_down_for_list('generalstats_list_selected', key)===false) {
-
-		/*
-		if we didn't find it, try
-		to move the element in the
-		second list
-		*/
-
-		generalstats_move_element_down_for_list('generalstats_list_available', key);
-	}
-
-	/*
-	update the lists
-	*/
-
-	generalstats_update_drag_and_drop_lists();
-}
-
-/*
-initializes or reinitializes the
+initializes the
 drag_and_drop lists
 */
 
 function generalstats_initialize_drag_and_drop() {
 
-	Sortable.create("generalstats_list_selected", {
-		dropOnEmpty:true,
-		containment:["generalstats_list_selected","generalstats_list_available"],
-		constraint:false,
-		onUpdate:function(){ generalstats_update_drag_and_drop_lists(); }
+	/*
+	add sortable to
+	both lists
+	*/
+
+	jQuery(function() {
+		jQuery('#generalstats_list_selected, #generalstats_list_available').sortable({
+			connectWith: '.generalstats_sortablelist'
+		}).disableSelection();
 	});
 
 	/*
-	as we have two lists,
-	the second list will be
-	automatically updated
-	if the first list is updated
+	add event handlers
+	to watch update
+	on list_selected
+
+	- stop
+	- receive
+	- remove
 	*/
 
-	Sortable.create("generalstats_list_available", {
-		dropOnEmpty:true,
-		containment:["generalstats_list_selected","generalstats_list_available"],
-		constraint:false
+	jQuery('#generalstats_list_selected').on('sortstop sortreceive sortremove', function() {
+		generalstats_update_drag_and_drop_lists();
 	});
 }
 
@@ -156,9 +86,9 @@ function generalstats_get_sorted_ids(list) {
 	get current stats order
 	*/
 
-	var list=escape(Sortable.sequence('generalstats_list_'+list));
+	var maybe_sorted_ids=jQuery('#generalstats_list_'+list).sortable('toArray');
 
-	var sorted_ids = [-1];
+	var sorted_ids=[-1];
 
 	/*
 	if we got at least one element
@@ -166,8 +96,7 @@ function generalstats_get_sorted_ids(list) {
 	retrieve the sorted_ids
 	*/
 
-	if (list && list.length>0) {
-		var maybe_sorted_ids = unescape(list).split(',');
+	if (maybe_sorted_ids && maybe_sorted_ids.length>0) {
 		var ret_sorted_ids=[];
 
 		/*
@@ -175,7 +104,9 @@ function generalstats_get_sorted_ids(list) {
 		filter out empty elements
 		*/
 
-		for (var i=0;i<maybe_sorted_ids.length;i++) {
+		for (var i=0; i<maybe_sorted_ids.length; i++) {
+			maybe_sorted_ids[i]=maybe_sorted_ids[i].replace('generalstats_stat_', '');
+
 			if (maybe_sorted_ids[i] && maybe_sorted_ids[i]>-1) {
 				ret_sorted_ids.push(maybe_sorted_ids[i]);
 			}
@@ -194,7 +125,6 @@ according to the number of elements
 */
 
 function generalstats_set_list_height(list, sorted_ids) {
-
 	var element_height=32;
 
 	/*
@@ -210,7 +140,7 @@ function generalstats_set_list_height(list, sorted_ids) {
 	set new list height
 	*/
 
-	$('generalstats_list_'+list).style.height = list_length+'px';
+	jQuery('#generalstats_list_'+list).height(list_length);
 }
 
 /*
@@ -220,35 +150,39 @@ updates stats textfields
 
 function generalstats_update_drag_and_drop_lists() {
 
+	/*
+	get sorted ids of
+	list selected
+	*/
+
 	var selected_sorted_ids=generalstats_get_sorted_ids('selected');
 
 	/*
 	clear all previously set values
 	*/
 
-	for (var i = 0; i < generalstats_keys.length; i++) {
-		$('generalstats_stat_pos_'+generalstats_keys[i]).value = "";
-	}
+	for (var i=0; i<generalstats_keys.length; i++)
+		jQuery('#generalstats_stat_pos_'+generalstats_keys[i]).val('');
 
 	/*
 	set new values
 	in textfields
 	*/
 
-	for (var i = 0; i < selected_sorted_ids.length; i++) {
+	for (var i=0; i<selected_sorted_ids.length; i++) {
 
 		/*
-		looks up keys array for matching index
+		look up keys array for matching index
 		*/
 
-		for (var j = 0; j < generalstats_keys.length; j++) {
+		for (var j=0; j<generalstats_keys.length; j++) {
 
 			/*
 			match found
 			*/
 
 			if (generalstats_keys[j]==selected_sorted_ids[i]) {
-				$('generalstats_stat_pos_'+generalstats_keys[j]).value = i+1;
+				jQuery('#generalstats_stat_pos_'+generalstats_keys[j]).val(i+1);
 			}
 		}
 	}
@@ -258,23 +192,28 @@ function generalstats_update_drag_and_drop_lists() {
 	var available_sorted_ids=generalstats_get_sorted_ids('available');
 
 	generalstats_set_list_height('available', available_sorted_ids);
-
 }
 
 /*
-load selected field in edit panel
+load current value
+for selected field
+in edit panel
 */
 
-function generalstats_populate_drag_and_drop (key) {
+function generalstats_populate_drag_and_drop(key) {
 	generalstats_populate_drag_and_drop_set_value(key, false);
 }
 
 /*
-load selected field in edit panel
+load default
+for selected field
+in edit panel
 */
 
-function generalstats_populate_drag_and_drop_default () {
-	generalstats_populate_drag_and_drop_set_value ($('generalstats_edit_selected_stat').value, true);
+function generalstats_populate_drag_and_drop_default() {
+	generalstats_populate_drag_and_drop_set_value(jQuery('#generalstats_edit_selected_stat').val(), true);
+
+	generalstats_change_entry();
 }
 
 /*
@@ -283,41 +222,52 @@ if reset is set to false, the user's value
 will be loaded
 */
 
-function generalstats_populate_drag_and_drop_set_value (key, reset) {
+function generalstats_populate_drag_and_drop_set_value(key, reset) {
+	jQuery('.generalstats_sortablelist').removeClass('generalstats_sortablelist_active');
 
-	/*
-	hide message
-	*/
-
-	$('generalstats_edit_success_label').style.display='none';
-
-	for (var j = 0; j < generalstats_keys.length; j++) {
-		if (generalstats_keys[j]==key) {
-			$('generalstats_edit_selected_stat').value=key;
+	for (var i=0; i<generalstats_keys.length; i++) {
+		if (generalstats_keys[i]==key) {
 
 			/*
-			create label with stat-name
+			mark entry in list
 			*/
 
-			Element.replace($('generalstats_edit_label'), '<span id="generalstats_edit_label">Text for '+generalstats_fields[j]+'</span>');
+			jQuery('#generalstats_stat_'+key).addClass('generalstats_sortablelist_active');
+
+			/*
+			remember currently selected stat
+			*/
+
+			jQuery('#generalstats_edit_selected_stat').val(key);
+
+			/*
+			replace stat-name in label
+			*/
+
+			jQuery('#generalstats_edit_label').text('Text for '+generalstats_fields[i]);
+
+			/*
+			load stat's default name
+			*/
+
+			var new_value=generalstats_fields[i];
 
 			/*
 			load stat's custom name
 			*/
 
-			var new_value=generalstats_fields[j];
-
 			if (!reset)
-				new_value=$('generalstats_stat_desc_'+generalstats_keys[j]).value;
+				new_value=jQuery('#generalstats_stat_desc_'+generalstats_keys[i]).val();
 
-			$('generalstats_edit_text').value = new_value;
+			jQuery('#generalstats_edit_text').val(new_value);
 
 			/*
-			assure display of div
+			display div
 			*/
-			$('generalstats_edit').style.display='block';
 
-			$('generalstats_edit_text').focus();
+			jQuery('#generalstats_edit').show(500);
+			jQuery('#generalstats_edit_text').focus();
+
 			break;
 		}
 	}
@@ -328,31 +278,30 @@ apply changes of currently selected stat
 */
 
 function generalstats_change_entry() {
-
-	var field_name= $('generalstats_edit_selected_stat').value;
+	var field_name=jQuery('#generalstats_edit_selected_stat').val();
 
 	if (field_name.length>0) {
-		$('generalstats_stat_desc_'+field_name).value = $('generalstats_edit_text').value;
-		new Effect.Highlight($('generalstats_edit'),{startcolor:'#30df8b'});
-		new Effect.Appear($('generalstats_edit_success_label'));
+
+		/*
+		adopt field-value in list
+		*/
+
+		jQuery('#generalstats_stat_desc_'+field_name).val(jQuery('#generalstats_edit_text').val());
+		jQuery('#generalstats_edit').effect('highlight', {color:'#30df8b'}, 1000);
 
 		/*
 		adopt drag and drop table
 		*/
 
-		for (var j = 0; j < generalstats_keys.length; j++) {
-			if (generalstats_keys[j]==field_name) {
-				$('generalstats_stat_'+generalstats_keys[j]).childNodes[2].nodeValue= $('generalstats_edit_text').value+' ('+generalstats_fields[j]+')';
-				new Effect.Highlight($('generalstats_stat_'+generalstats_keys[j]),{startcolor:'#30df8b'});
+		for (var i=0; i<generalstats_keys.length; i++) {
+			if (generalstats_keys[i]==field_name) {
+				jQuery('#generalstats_stat_'+generalstats_keys[i]+' span').html(jQuery('#generalstats_edit_text').val()+' ('+generalstats_fields[i]+')');
+				jQuery('#generalstats_stat_'+generalstats_keys[i]).effect('highlight', {color:'#30df8b'}, 1000);
 
 				break;
 			}
 		}
 
-	}
-
-	else {
-		alert('Please click on the desired list field to adopt setting!');
 	}
 
 }

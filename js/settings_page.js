@@ -3,9 +3,9 @@ hide all option-page sections
 */
 
 function generalstats_hide_sections() {
-	for (var i=0;i<generalstats_sections.length;i++) {
-		$('generalstats_'+generalstats_sections[i]).style.display="none";
-		$('generalstats_'+generalstats_sections[i]+'_link').className="";
+	for (var i=0; i<generalstats_sections.length; i++) {
+		jQuery('#generalstats_'+generalstats_sections[i]+'_link').removeClass('current');
+		jQuery('#generalstats_'+generalstats_sections[i]).css('display', 'none');
 	}
 }
 
@@ -19,7 +19,7 @@ function generalstats_open_section(section) {
 	var my_section='';
 
 	if (section.length>0) {
-		for (var i=0;i<generalstats_sections.length;i++) {
+		for (var i=0; i<generalstats_sections.length; i++) {
 			if (generalstats_sections[i]==section) {
 				my_section=section;
 				break;
@@ -30,7 +30,7 @@ function generalstats_open_section(section) {
 	if (my_section.length===0)
 		my_section=generalstats_sections[0];
 
-	$('generalstats_'+my_section).style.display="block";
-	$('generalstats_'+my_section+'_link').className="current";
-	$('generalstats_section').value=my_section;
+	jQuery('#generalstats_'+my_section).css('display', 'block');
+	jQuery('#generalstats_'+my_section+'_link').addClass('current');
+	jQuery('#generalstats_section').val(my_section);
 }

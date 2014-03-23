@@ -5,14 +5,14 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 3.00
+Version: 3.10
 Author URI: http://www.bernhard-riedl.com/
 */
 
 /*
-Copyright 2006-2013 Dr. Bernhard Riedl
+Copyright 2006-2014 Dr. Bernhard Riedl
 
-Inspirations & Proof-Reading 2007-2013
+Inspirations & Proof-Reading 2007-2014
 by Veronika Grascher
 
 This program is free software:
@@ -172,9 +172,9 @@ class GeneralStats {
 				'5' => 'Links',
 				'6' => 'Tags',
 				'7' => 'Link-Categories',
-				'10' => 'Words_in_Posts',
-				'11' => 'Words_in_Comments',
-				'12' => 'Words_in_Pages'
+				'10' => 'Words in Posts',
+				'11' => 'Words in Comments',
+				'12' => 'Words in Pages'
 			)
 		),
 		'format' => array(
@@ -280,9 +280,17 @@ class GeneralStats {
 
 		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('jquery'), '3.00');
 
-		wp_register_script($this->get_prefix().'drag_and_drop', $this->get_plugin_url().'js/drag_and_drop.js', array('jquery', 'jquery-ui-sortable', 'jquery-effects-highlight', $this->get_prefix().'utils'), '3.00');
+		wp_register_script($this->get_prefix().'drag_and_drop', $this->get_plugin_url().'js/drag_and_drop.js', array('jquery', 'jquery-ui-sortable', 'jquery-effects-highlight', $this->get_prefix().'utils'), '3.10');
 
-		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('jquery', $this->get_prefix().'drag_and_drop', $this->get_prefix().'utils'), '3.00');
+		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('jquery', $this->get_prefix().'drag_and_drop', $this->get_prefix().'utils'), '3.10');
+	}
+
+	/*
+	register css styles
+	*/
+
+	function register_styles() {
+		wp_register_style($this->get_prefix().'admin', $this->get_plugin_url().'css/admin.css', array(), '3.10');
 	}
 
 	/*
@@ -296,6 +304,7 @@ class GeneralStats {
 		*/
 
 		add_action('init', array($this, 'register_scripts'));
+		add_action('init', array($this, 'register_styles'));
 
 		/*
 		general
@@ -1660,53 +1669,6 @@ class GeneralStats {
 	}
 
 	/*
-	process the admin_color-array
-	*/
-
-	private function get_admin_colors() {
-
-		/*
-		default colors = fresh
-		*/
-
-		$available_admin_colors=array(
-			'fresh' => array(
-				'#464646',
-				'#6D6D6D',
-				'#F1F1F1',
-				'#DFDFDF'
-			),
-			'classic' => array(
-				'#073447',
-				'#21759B',
-				'#EAF3FA',
-				'#BBD8E7'
-			)
-		);
-
-		$current_color = get_user_option('admin_color');
-		if (strlen($current_color)<1)
-			$current_color='fresh';
-
-		/*
-		include user-defined color schemes
-		*/
-
-		$user_available_admin_colors = apply_filters($this->get_prefix().'available_admin_colors', array());
-
-		if (!empty($user_available_admin_colors) && is_array($user_available_admin_colors))
-			foreach($user_available_admin_colors as $key => $available_admin_color)
-				if (is_array($available_admin_color) && sizeof($available_admin_color)==4)
-					if (!array_key_exists($key, $available_admin_colors))
-						$available_admin_colors[$key]=$user_available_admin_colors[$key];
-
-		if (!array_key_exists($current_color, $available_admin_colors))
-			return $available_admin_colors['fresh'];
-		else
-			return $available_admin_colors[$current_color];
-	}
-
-	/*
 	send Mail to user
 	*/
 
@@ -1766,17 +1728,13 @@ class GeneralStats {
 
 	/*
 	add GeneralStats to WordPress Settings Menu
-
-	we use the hook admin_head instead of admin_print_styles
-	because otherwise the CSS-background for disabled
-	input fields does not work
 	*/
 
 	function admin_menu() {
 		$options_page=add_options_page($this->get_nicename(), $this->get_nicename(), 'manage_options', $this->get_prefix(false), array($this, 'options_page'));
 
 		add_action('admin_print_scripts-'.$options_page, array($this, 'settings_print_scripts'));
-		add_action('admin_head-'.$options_page, array($this, 'admin_styles'));
+		add_action('admin_print_styles-'.$options_page, array($this, 'admin_print_styles'));
 		add_action('load-'.$options_page, array($this, 'options_page_help_tab'));
 	}
 
@@ -1785,7 +1743,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.00\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.10\"/>\n");
 	}
 
 	/*
@@ -1893,103 +1851,13 @@ class GeneralStats {
 	}
 
 	/*
-	loads the necessary CSS-styles
+	includes the necessary CSS-styles
 	for the admin-page
 	*/
 
-	function admin_styles() {
-		$admin_css_colors=$this->get_admin_colors(); ?>
-
-		<style type="text/css">
-
-			.<?php echo($this->get_prefix()); ?>wrap ul {
-				list-style-type : disc;
-				padding: 5px 5px 5px 30px;
-			}
-
-			ul.subsubsub.<?php echo($this->get_prefix(false)); ?> {
-				list-style: none;
-				margin: 8px 0 5px;
-				padding: 0;
-				white-space: nowrap;
-				float: none;
-				display: block;
-			}
- 
-			ul.subsubsub.<?php echo($this->get_prefix(false)); ?> a {
-				line-height: 2;
-				padding: .2em;
-				text-decoration: none;
-			}
-
-			ul.subsubsub.<?php echo($this->get_prefix(false)); ?> li {
-				display: inline;
-				margin: 0;
-				padding: 0;
-				border-left: 1px solid #ccc;
-				padding: 0 .5em;
-			}
-
-			ul.subsubsub.<?php echo($this->get_prefix(false)); ?> li:first-child {
-				padding-left: 0;
-				border-left: none;
-			}
-
-			li.<?php echo($this->get_prefix()); ?>sortablelist {
-				background-color: <?php echo $admin_css_colors[1]; ?>;
-				color: <?php echo $admin_css_colors[3]; ?>;
-				cursor : move;
-				padding: 3px 5px 3px 5px;
-				-moz-border-radius: 6px;
-			}
-
-			li.<?php echo($this->get_prefix()); ?>sortablelist_active {
-				border: 1px solid #ffd800;
-			}
-
-			ul.<?php echo($this->get_prefix()); ?>sortablelist {
-				float: left;
-				border: 1px <?php echo $admin_css_colors[0]; ?> solid;
-				list-style-image : none;
-				list-style-type : none;
-				margin: 0px 20px 20px 0px;
-				padding: 10px;
-				-moz-border-radius: 6px;
-			}
-
-			#<?php echo($this->get_prefix()); ?>edit {
-				float: right;
-				border: 1px solid;
-				margin: 0px 20px 0px 0px;
-				width: 400px;
-				padding: 5px;
-				-moz-border-radius: 6px;
-			}
-
-			#<?php echo($this->get_prefix()); ?>edit_header {
-				background-color: <?php echo $admin_css_colors[1]; ?>;
-				color: <?php echo $admin_css_colors[3]; ?>;
-				padding: 3px 3px 3px 5px;
-				-moz-border-radius: 6px;
-			}
-
-			#<?php echo($this->get_prefix()); ?>edit_submit {
-				margin: 10px 0px 5px 0px;
-			}
-
-			img.<?php echo($this->get_prefix()); ?>arrowbutton {
-				vertical-align: bottom;
-				cursor: pointer;
-				margin-left: 5px;
-			}
-
-			input[disabled], input[disabled='disabled'] {
-				background: #EEE;
-			}
-
-		</style>
-
-	<?php }
+	function admin_print_styles() {
+		wp_enqueue_style($this->get_prefix().'admin');
+	}
 
 	/*
 	mails the stats
@@ -3240,12 +3108,21 @@ class GeneralStats {
 			$section_nicename=$sections[$section]['nicename'];
 
 		$id='';
+		$class='';
+		$section_span='';
+
 		if ($create_id)
 			$id=' id="'.$this->get_prefix().$section.'_link"';
+		else {
+			$class=' class="'.$this->get_prefix().'section_link"';
+			$section_span='<span class="'.$this->get_prefix().'section_text">'.$section_nicename.'</span>';
+		}
 
 		$menuitem_onclick=" onclick=\"".$this->get_prefix()."open_section('".$section."');\"";
 
-		return '<a'.$id.$menuitem_onclick.' href="javascript:void(0);">'.$section_nicename.'</a>';
+		$section_link='<a'.$id.$class.$menuitem_onclick.' href="javascript:void(0);">'.$section_nicename.'</a>';
+
+		return $section_span.$section_link;
 	}
 
 	/*
@@ -3319,7 +3196,6 @@ class GeneralStats {
 		*/
 
 		?><div class="wrap">
-		<?php if (function_exists('screen_icon')) screen_icon(); ?>
 		<h2><?php echo($this->get_nicename()); ?></h2>
 
 		<?php call_user_func(array($this, 'callback_'.$section_prefix.'_intro')); ?>
@@ -3330,7 +3206,9 @@ class GeneralStats {
 		$menu='';
 
 		foreach ($settings_sections as $key => $section)
-			$menu.='<li>'.$this->get_section_link($settings_sections, $key, '', true).'</li>';
+			$menu.='<li>'.$this->get_section_link($settings_sections, $key, '', true).' |</li>';
+
+		$menu=substr($menu, 0, strlen($menu)-7).'</li>';
 
 		echo($menu);
 		?>
@@ -3416,25 +3294,21 @@ class GeneralStats {
 	echo(implode(',', $available_sections));
 	?>];
 
+	<?php if ($is_wp_options) { ?>
+
 	/*
-	display js-menu and content-block
-	if js has been disabled,
-	the menu will not be visible
+	media-query needs to be realized
+	with javascript
+	because of sub-menu selection
 	*/
 
 	jQuery(document).ready(function() {
-		var section=jQuery('#<?php echo($this->get_prefix()); ?>section').val();
-
-		if (!section)
-			section='';
-
-		<?php echo($this->get_prefix()); ?>open_section(section);
-
-		jQuery('#<?php echo($this->get_prefix()); ?>menu').css('display', 'block');
-		jQuery('#<?php echo($this->get_prefix()); ?>content').css('display', 'block');
+		<?php echo($this->get_prefix()); ?>resize_settings_page();
 	});
 
-	<?php if ($is_wp_options) { ?>
+	jQuery(window).on('resize orientationchange', function() {
+		<?php echo($this->get_prefix()); ?>resize_settings_page();
+	});
 
 	/*
 	submit only without errors
@@ -3463,6 +3337,14 @@ class GeneralStats {
 	});
 
 	<?php } ?>
+
+	/*
+	display content-block
+	*/
+
+	jQuery(document).ready(function() {
+		jQuery('#<?php echo($this->get_prefix()); ?>content').css('display', 'block');
+	});
 
 	/* ]]> */
 
@@ -3539,8 +3421,11 @@ class GeneralStats {
 	*/
 
 	private function setting_textfield($name, $type, $size=30, $javascript_validate='') {
-		$default_value=$this->get_setting_default_value($name, $type); ?>
-		<input type="text" <?php echo($this->get_setting_name_and_id($name).' '.$javascript_validate); ?> maxlength="<?php echo($size); ?>" size="<?php echo($size); ?>" value="<?php echo $default_value; ?>" />
+		$default_value=$this->get_setting_default_value($name, $type);
+		$size_attribute=($size>40) ? 'class="widefat"' : 'size="'.$size.'"';
+		?>
+
+		<input type="text" <?php echo($this->get_setting_name_and_id($name).' '.$javascript_validate); ?> maxlength="<?php echo($size); ?>" <?php echo($size_attribute); ?> value="<?php echo $default_value; ?>" />
 	<?php }
 
 	/*
@@ -3628,7 +3513,7 @@ class GeneralStats {
 		<h3>Support</h3>
 		<?php echo($user_identity); ?>, if you would like to support the development of <?php echo($this->get_nicename()); ?>, you can invite me for a <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS">virtual pizza</a> for my work. <?php echo(convert_smilies(':)')); ?><br /><br />
 
-		<a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" alt="Donate to <?php echo($this->get_nicename()); ?>" /></a><br /><br />
+		<a class="<?php echo($this->get_prefix()); ?>button_donate" title="Donate to <?php echo($this->get_nicename()); ?>" target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS">Donate</a><br /><br />
 
 		Maybe you also want to <?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?><a href="link-add.php"><?php } ?>add a link<?php if (current_user_can('manage_links') && ((!has_filter('default_option_link_manager_enabled') || get_option( 'link_manager_enabled')))) { ?></a><?php } ?> to <a target="_blank" href="http://www.bernhard-riedl.com/projects/">http://www.bernhard-riedl.com/projects/</a>.<br /><br />
 	<?php }
@@ -3660,7 +3545,7 @@ class GeneralStats {
 	function options_page_help() {
 		return "<div class=\"".$this->get_prefix()."wrap\"><ul>
 
-			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Layout Section')." or in the ".$this->get_section_link($this->options_page_sections, 'expert', 'Expert Section').". Latter section also works without the usage of JavaScript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
+			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Layout Section')." or in the ".$this->get_section_link($this->options_page_sections, 'expert', 'Expert Settings').". Latter section also works without the usage of JavaScript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
 
 			<li>Style-customizations can be made in the ".$this->get_section_link($this->options_page_sections, 'format', 'Format Section').".</li>
 
@@ -3691,7 +3576,7 @@ class GeneralStats {
 
 			<li>You can add available or remove selected stats (like posts, users, etc.) via drag and drop between the lists.</li>
 
-			<li>To customize the descriptions of a stat click on it and edit the output name in the form, which appears on the right. After clicking <strong>Change</strong> the selected stat's name will be adopted.</li>
+			<li>To customize the descriptions of a stat click on it and edit the output name in the form, which appears either on the right or below the lists. After clicking <strong>Change</strong> the selected stat's name will be adopted.</li>
 
 			<li>To re-order the stats within a list either use drag and drop or click on the arrows on the left side of the particular stat.</li>
 
@@ -3752,7 +3637,7 @@ class GeneralStats {
 			add stat to list-available
 			*/
 
-			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'<span>'.$after_tag."\n";
+			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
 		}
 
 		/*
@@ -3783,24 +3668,44 @@ class GeneralStats {
 		$sizelist_available=sizeof($this->stats_available)*$element_height;
 		if ($sizelist_available<=0) $sizelist_available=$element_height;
 
-		$list_selected='<div><h4>Selected Stats</h4><ul class="'.$this->get_prefix().'sortablelist" id="'.$this->get_prefix().'list_selected" style="height:'.$sizelist_selected.'px;width:370px;"><li style="display:none"></li>'.$list_selected.'</ul></div>';
+		$list_selected='<div><h4 style="margin: 0.8em 0;">Selected Stats</h4><ul class="'.$this->get_prefix().'sortablelist" id="'.$this->get_prefix().'list_selected" style="height:'.$sizelist_selected.'px;width:370px;"><li style="display:none"></li>'.$list_selected.'</ul></div>';
 
 		$list_available='<div><h4>Available Stats</h4><ul class="'.$this->get_prefix().'sortablelist" id="'.$this->get_prefix().'list_available" style="height:'.$sizelist_available.'px;width:370px;"><li style="display:none"></li>'.$list_available.'</ul></div>';
 
 		/*
-		output selected stats
-		and edit form
+		lists-container
 		*/
 
-		echo($list_selected); ?>
+		echo('<div id="'.$this->get_prefix().'lists">');
+
+		/*
+		output selected stats
+		*/
+
+		echo($list_selected);
+
+		/*
+		output available stats
+		*/
+
+		echo($list_available);
+
+		echo('</div>');
+
+		/*
+		output edit form
+		*/
+
+		?>
 
 		<div id="<?php echo($this->get_prefix()); ?>edit" style="display:none">
 
 			<input type="hidden" id="<?php echo($this->get_prefix()); ?>edit_selected_stat" />
 
-			<div id="<?php echo($this->get_prefix()); ?>edit_header"><label for="<?php echo($this->get_prefix()); ?>edit_text"><span id="<?php echo($this->get_prefix()); ?>edit_label"></span></label>
-				<input id="<?php echo($this->get_prefix()); ?>edit_text" type="text" size="25" maxlength="30" />
+			<div id="<?php echo($this->get_prefix()); ?>edit_header"><label style="margin-left: 2px; font-weight: 600;" for="<?php echo($this->get_prefix()); ?>edit_text"><span style="width: 99%" id="<?php echo($this->get_prefix()); ?>edit_label"></span></label>
 			</div>
+
+			<input id="<?php echo($this->get_prefix()); ?>edit_text" type="text" maxlength="30" style="margin: 3px 1px; width: 99%" />
 
 			<div id="<?php echo($this->get_prefix()); ?>edit_submit">
 				<input class="button-secondary" type="button" id="<?php echo($this->get_prefix()); ?>edit_change" value="Change" />
@@ -3810,10 +3715,6 @@ class GeneralStats {
 		</div>
 
 		<br style="clear:both" />
-
-		<?php echo($list_available); ?>
-
-		<br style="clear:both" /><br />
 
 		<?php
 
@@ -3947,7 +3848,12 @@ class GeneralStats {
 		In this section you can customize the layout of <?php echo($this->get_section_link($this->options_page_sections, 'preview', $this->get_nicename().'\'s output')); ?> after saving your changes by clicking on <strong>Save Changes</strong>. Tutorials, references and examples about <abbr title="HyperText Markup Language">HTML</abbr> and <abbr title="Cascading Style Sheets">CSS</abbr> can be found on <a target="_blank" href="http://www.w3schools.com/">W3Schools</a>.
 
 		<ul>
-			<li>The stat-list will be wrapped within <em>before List</em> and <em>after List</em>. Each stat-entry is based on <em>Format of Stat-Entry</em>. The following fields will be replaced by the attributes of each selected stat: <em>%name</em> and <em>%count</em>. You can also customize the format of the <em>Thousands Separator</em>.</li>
+			<li>The stat-list will be wrapped within <em>before List</em> and <em>after List</em>. Each stat-entry is based on <em>Format of Stat-Entry</em>. The following fields will be replaced by the attributes of each selected stat:<ul>
+				<li><em>%name</em></li>
+				<li><em>%count</em></li></ul>
+			</li>
+
+			<li>You can also customize the format of the <em>Thousands Separator</em>.</li>
 
 			<li>In case you do not need a container, you can disable the option <em>Wrap output in div-container</em>.</li>
 
@@ -3974,7 +3880,7 @@ class GeneralStats {
 	}
 
 	function setting_format_stat($params=array()) {
-		$this->setting_textfield('format_stat', 'defaults', 100);
+		$this->setting_textfield('format_stat', 'defaults', 500);
 	}
 
 	function setting_thousands_separator($params=array()) {
@@ -4035,7 +3941,7 @@ class GeneralStats {
 
 			<li>If you activate <em>Use Action Hooks</em>, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer <em>Cache Time</em>.</li>
 
-			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the Words_in_* stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
+			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the <code>Words in *</code> stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
 
 		</ul>
 	<?php }
@@ -4159,9 +4065,9 @@ class GeneralStats {
 		- 5 => 'Links'
 		- 6 => 'Tags'
 		- 7 => 'Link-Categories'
-		- 10 => 'Words_in_Posts'
-		- 11 => 'Words_in_Comments'
-		- 12 => 'Words_in_Pages'
+		- 10 => 'Words in Posts'
+		- 11 => 'Words in Comments'
+		- 12 => 'Words in Pages'
 
 	- `before_list`: default `<ul>`
 
@@ -4205,9 +4111,9 @@ class GeneralStats {
 		- 5 => 'Links'
 		- 6 => 'Tags'
 		- 7 => 'Link-Categories'
-		- 10 => 'Words_in_Posts'
-		- 11 => 'Words_in_Comments'
-		- 12 => 'Words_in_Pages'
+		- 10 => 'Words in Posts'
+		- 11 => 'Words in Comments'
+		- 12 => 'Words in Pages'
 
 	- `thousands_separator`: divides counts by thousand delimiters; default `,` => e.g. 1,386,267
 

@@ -265,8 +265,7 @@ function generalstats_populate_drag_and_drop_set_value(key, reset) {
 			display div
 			*/
 
-			jQuery('#generalstats_edit').show(500);
-			jQuery('#generalstats_edit_text').focus();
+			jQuery('#generalstats_edit').fadeIn(500);
 
 			break;
 		}

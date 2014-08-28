@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 3.10
+Version: 3.20
 Author URI: http://www.bernhard-riedl.com/
 */
 
@@ -37,7 +37,7 @@ You should have received a copy of the
 GNU General Public License
 along with this program.
 
-If not, see http://www.gnu.org/licenses/.
+If not, see https://www.gnu.org/licenses/.
 */
 
 /*
@@ -134,7 +134,7 @@ class GeneralStats {
 		'view_stats_capability' => 'read',
 		'debug_mode' => false,
 
-		'section' => 'drag_and_drop'
+		'section' => 'selection_gui'
 	);
 
 	/*
@@ -156,13 +156,13 @@ class GeneralStats {
 	*/
 
 	private $options_page_sections=array(
-		'drag_and_drop' => array(
-			'nicename' => 'Drag and Drop Layout',
-			'callback' => 'drag_and_drop'
+		'selection_gui' => array(
+			'nicename' => 'Selection GUI',
+			'callback' => 'selection_gui'
 		),
-		'expert' => array(
-			'nicename' => 'Expert Settings',
-			'callback' => 'expert',
+		'manual_selection' => array(
+			'nicename' => 'Manual Selection',
+			'callback' => 'manual_selection',
 			'fields' => array(
 				'0' => 'Users',
 				'1' => 'Categories',
@@ -270,19 +270,19 @@ class GeneralStats {
 		http://www.timdown.co.uk/jshashtable/
 		*/
 
-		wp_register_script('jshashtable', $this->get_plugin_url().'js/jshashtable/hashtable.js', array(), '3.0');
+		wp_register_script('jshashtable', $this->get_plugin_url().'vendor/jshashtable/hashtable.js', array(), '3.0');
 
 		/*
 		GeneralStats JS
 		*/
 
-		wp_register_script($this->get_prefix().'refresh', $this->get_plugin_url().'js/refresh.js', array('jquery', 'jshashtable'), '3.00');
+		wp_register_script($this->get_prefix().'refresh', $this->get_plugin_url().'js/refresh.js', array('jquery', 'jshashtable'), '3.20');
 
 		wp_register_script($this->get_prefix().'utils', $this->get_plugin_url().'js/utils.js', array('jquery'), '3.00');
 
-		wp_register_script($this->get_prefix().'drag_and_drop', $this->get_plugin_url().'js/drag_and_drop.js', array('jquery', 'jquery-ui-sortable', 'jquery-effects-highlight', $this->get_prefix().'utils'), '3.10');
+		wp_register_script($this->get_prefix().'selection_gui', $this->get_plugin_url().'js/selection_gui.js', array('jquery', 'jquery-ui-sortable', 'jquery-effects-highlight', $this->get_prefix().'utils'), '3.20');
 
-		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('jquery', $this->get_prefix().'drag_and_drop', $this->get_prefix().'utils'), '3.10');
+		wp_register_script($this->get_prefix().'settings_page', $this->get_plugin_url().'js/settings_page.js', array('jquery', $this->get_prefix().'selection_gui', $this->get_prefix().'utils'), '3.20');
 	}
 
 	/*
@@ -290,7 +290,7 @@ class GeneralStats {
 	*/
 
 	function register_styles() {
-		wp_register_style($this->get_prefix().'admin', $this->get_plugin_url().'css/admin.css', array(), '3.10');
+		wp_register_style($this->get_prefix().'admin', $this->get_plugin_url().'css/admin.css', array('dashicons'), '3.20');
 	}
 
 	/*
@@ -420,7 +420,7 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/plugins/sabre/
+		https://wordpress.org/plugins/sabre/
 		*/
 
 		add_action('sabre_accepted_registration', array($this, 'force_user_cache_refresh'));
@@ -1673,9 +1673,11 @@ class GeneralStats {
 	*/
 
 	private function send_mail($subject, $message) {
-		$blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+		$blogname=wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
 
-		wp_mail(get_option('admin_email'), '['.$blogname.'] '. $subject, $message);
+		$message_headers=array('Auto-Submitted: auto-generated');
+
+		wp_mail(get_option('admin_email'), '['.$blogname.'] '. $subject, $message, $message_headers);
 	}
 
 	/*
@@ -1717,11 +1719,11 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/plugins/sabre/
+		https://wordpress.org/plugins/sabre/
 		*/
 
 		if (defined('SABRE_TABLE'))
-			$this->options_page_sections['expert']['fields']['0'].='<br />(in Cooperation with <a href="'.admin_url('tools.php?page=sabre').'">Sabre</a>)';
+			$this->options_page_sections['manual_selection']['fields']['0'].='<br />(in Cooperation with <a href="'.admin_url('tools.php?page=sabre').'">Sabre</a>)';
 
 		$this->add_settings_sections($this->options_page_sections, 'settings');
 	}
@@ -1743,7 +1745,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.10\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.20\"/>\n");
 	}
 
 	/*
@@ -2384,7 +2386,7 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/plugins/sabre/
+		https://wordpress.org/plugins/sabre/
 		*/
 
 		if ($stat==0 && defined('SABRE_TABLE'))
@@ -2412,7 +2414,7 @@ class GeneralStats {
 
 		/*
 		Sabre Cooperation on 'deny early login'
-		http://wordpress.org/plugins/sabre/
+		https://wordpress.org/plugins/sabre/
 		*/
 
 		if ($stat==0 && defined('SABRE_TABLE'))
@@ -3070,7 +3072,7 @@ class GeneralStats {
 				foreach ($section['fields'] as $field_key => $field) {
 					$label_for='';
 
-					if ($section_key=='expert') {
+					if ($section_key=='manual_selection') {
 						$label_for=$this->get_prefix()."stat_pos_".$field_key;
 					}
 
@@ -3271,7 +3273,7 @@ class GeneralStats {
 	<?php }
 
 	/*
-	settings pages's javascript
+	settings page's javascript
 	*/
 
 	private function settings_page_js($settings_sections, $is_wp_options) { ?>
@@ -3545,7 +3547,7 @@ class GeneralStats {
 	function options_page_help() {
 		return "<div class=\"".$this->get_prefix()."wrap\"><ul>
 
-			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Layout Section')." or in the ".$this->get_section_link($this->options_page_sections, 'expert', 'Expert Settings').". Latter section also works without the usage of JavaScript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
+			<li>You can insert new or edit your existing stat-entries in the ".$this->get_section_link($this->options_page_sections, 'selection_gui', 'Selection GUI Section')." or in the ".$this->get_section_link($this->options_page_sections, 'manual_selection', 'Manual Selection Section').". Latter section also works without the usage of JavaScript. In any way, new entries are only saved after clicking on <strong>Save Changes</strong>.</li>
 
 			<li>Style-customizations can be made in the ".$this->get_section_link($this->options_page_sections, 'format', 'Format Section').".</li>
 
@@ -3557,28 +3559,28 @@ class GeneralStats {
 
 			<li>Finally, you can publish the previously selected and saved stats either by adding a <a href=\"widgets.php\">Sidebar Widget</a> or by enabling the ".$this->get_section_link($this->options_page_sections, 'dashboard', 'Dashboard Widget').".</li>
 
-			<li><a target=\"_blank\" href=\"http://wordpress.org/plugins/generalstats/other_notes/\">Geek stuff</a>: You can output your stat-selection by calling the <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function <code>$".$this->get_prefix(false)."->output(\$params)</code> or <code>$".$this->get_prefix(false)."->count(\$params)</code> wherever you like (don't forget <code>global $".$this->get_prefix(false)."</code>). These functions can also be invoked by the usage of shortcodes.</li>
+			<li><a target=\"_blank\" href=\"https://wordpress.org/plugins/generalstats/other_notes/\">Geek stuff</a>: You can output your stat-selection by calling the <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function <code>$".$this->get_prefix(false)."->output(\$params)</code> or <code>$".$this->get_prefix(false)."->count(\$params)</code> wherever you like (don't forget <code>global $".$this->get_prefix(false)."</code>). These functions can also be invoked by the usage of shortcodes.</li>
 
 			<li>If you decide to uninstall ".$this->get_nicename().", firstly remove the optionally added <a href=\"widgets.php\">Sidebar Widget</a>, integrated <abbr title=\"PHP: Hypertext Preprocessor\">PHP</abbr> function or WordPress shortcode call(s). Afterwards, disable and delete ".$this->get_nicename()." in the <a href=\"plugins.php\">Plugins Tab</a>.</li>
 
-			<li><strong>For more information:</strong><br /><a target=\"_blank\" href=\"http://wordpress.org/plugins/".str_replace('_', '-', $this->get_prefix(false))."/\">".$this->get_nicename()." in the WordPress Plugin Directory</a></li>
+			<li><strong>For more information:</strong><br /><a target=\"_blank\" href=\"https://wordpress.org/plugins/".str_replace('_', '-', $this->get_prefix(false))."/\">".$this->get_nicename()." in the WordPress Plugin Directory</a></li>
 
 		</ul></div>";
 	}
 
 	/*
-	section drag_and_drop
+	section selection_gui
 	*/
 
-	function callback_settings_drag_and_drop() { ?>
+	function callback_settings_selection_gui() { ?>
 
 		<ul>
 
-			<li>You can add available or remove selected stats (like posts, users, etc.) via drag and drop between the lists.</li>
+			<li>You can add available stats or remove selected stats by moving them between the lists. This can be done either by using drag and drop or clicking on the double-arrow<div class="dashicons dashicons-leftright"></div>.</li>
 
-			<li>To customize the descriptions of a stat click on it and edit the output name in the form, which appears either on the right or below the lists. After clicking <strong>Change</strong> the selected stat's name will be adopted.</li>
+			<li>To customize the descriptions of a stat click on it and edit the output name in the form which appears either on the right or below the lists. After clicking <strong>Change</strong> the selected stat's name will be adopted.</li>
 
-			<li>To re-order the stats within a list either use drag and drop or click on the arrows on the left side of the particular stat.</li>
+			<li>To re-order the stats within a list either use drag and drop or click on the arrows<div class="dashicons dashicons-arrow-up"></div><div class="dashicons dashicons-arrow-down"></div>on the left side of the particular stat.</li>
 
 			<li>Don't forget to save all your adjustments by clicking on <strong>Save Changes</strong>.</li>
 
@@ -3607,15 +3609,15 @@ class GeneralStats {
 			arrows
 			*/
 
-			$up_arrow='<img class="'.$this->get_prefix().'arrowbutton" src="'.$this->get_plugin_url().'arrow_up_blue.png" onclick="'.$this->get_prefix().'move_element_up('.$key.');" alt="move element up" />';
-
-			$down_arrow='<img class="'.$this->get_prefix().'arrowbutton" style="margin-right:15px" src="'.$this->get_plugin_url().'arrow_down_blue.png" onclick="'.$this->get_prefix().'move_element_down('.$key.');" alt="move element down" />';
+			$up_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
+			$down_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
+			$move_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
 
 			/*
 			add stat to list-selected
 			*/
 
-			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
+			$list_selected.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.$move_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
 		}
 
 		/*
@@ -3629,30 +3631,30 @@ class GeneralStats {
 			arrows
 			*/
 
-			$up_arrow='<img class="'.$this->get_prefix().'arrowbutton" src="'.$this->get_plugin_url().'arrow_up_blue.png" onclick="'.$this->get_prefix().'move_element_up('.$key.');" alt="move element up" />';
-
-			$down_arrow='<img class="'.$this->get_prefix().'arrowbutton" style="margin-right:15px" src="'.$this->get_plugin_url().'arrow_down_blue.png" onclick="'.$this->get_prefix().'move_element_down('.$key.');" alt="move element down" />';
+			$up_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
+			$down_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
+			$move_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
 
 			/*
 			add stat to list-available
 			*/
 
-			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
+			$list_available.= $before_tag. '"'.$before_key.$key.'">'.$up_arrow.$down_arrow.$move_arrow.'<span>'.htmlentities($tag, ENT_QUOTES, get_option('blog_charset'), false).'</span>'.$after_tag."\n";
 		}
 
 		/*
-		add listeners for drag-and-drop edit panel
+		add listeners for edit panel
 		*/
 
 		$list_selected_listeners='';
 		$list_available_listeners='';
 
 		foreach ($this->stats_selected as $key => $stat) {
-			$list_selected_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
+			$list_selected_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_list_edit('".$key."') });";
 		}
 
 		foreach ($this->stats_available as $key => $stat) {
-			$list_available_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_drag_and_drop('".$key."') });";
+			$list_available_listeners.="jQuery('#".$before_key.$key."').click(function(){ ".$this->get_prefix()."populate_list_edit('".$key."') });";
 		}
 
 		/*
@@ -3724,10 +3726,10 @@ class GeneralStats {
 
 		?>
 
-		<?php $this->callback_settings_drag_and_drop_js($list_selected_listeners, $list_available_listeners);
+		<?php $this->callback_settings_selection_gui_js($list_selected_listeners, $list_available_listeners);
 	}
 
-	private function callback_settings_drag_and_drop_js($list_selected_listeners, $list_available_listeners) { ?>
+	private function callback_settings_selection_gui_js($list_selected_listeners, $list_available_listeners) { ?>
 
 	<script type="text/javascript">
 
@@ -3752,7 +3754,7 @@ class GeneralStats {
 
 	jQuery('#<?php echo($this->get_prefix()); ?>edit_change').click(function(){ <?php echo($this->get_prefix()); ?>change_entry(); });
 
-	jQuery('#<?php echo($this->get_prefix()); ?>edit_default').click(function(){ <?php echo($this->get_prefix()); ?>populate_drag_and_drop_default(); });
+	jQuery('#<?php echo($this->get_prefix()); ?>edit_default').click(function(){ <?php echo($this->get_prefix()); ?>populate_list_edit_default(); });
 
 	/*
 	register listeners for lists
@@ -3785,11 +3787,11 @@ class GeneralStats {
 	<?php }
 
 	/*
-	section expert
+	section manual_selection
 	*/
 
-	function callback_settings_expert() { ?>
-		In this section you can adopt your stats-selection 'by hand'. Changes you make here are only reflected in the <?php echo($this->get_section_link($this->options_page_sections, 'drag_and_drop', 'Drag and Drop Section')); ?> after clicking on <strong>Save Changes</strong>.
+	function callback_settings_manual_selection() { ?>
+		In this section you can adopt your stats-selection 'by hand'. Changes you make here are only reflected in the <?php echo($this->get_section_link($this->options_page_sections, 'selection_gui', 'Selection GUI Section')); ?> after clicking on <strong>Save Changes</strong>.
 	<?php }
 
 	/*
@@ -3941,7 +3943,7 @@ class GeneralStats {
 
 			<li>If you activate <em>Use Action Hooks</em>, the cache-cycle will be interrupted for events like editing a post or publishing a new comment. Thus, your stats should be updated automatically even if you have defined a longer <em>Cache Time</em>.</li>
 
-			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the <code>Words in *</code> stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="http://wordpress.org/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
+			<li><em>Rows at Once</em> is an expert setting of <?php echo($this->get_nicename()); ?>. This option effects the <code>Words in *</code> stats: higher value = increased memory usage, but better performance. Please consult the <a target="_blank" href="https://wordpress.org/plugins/<?php echo($this->get_prefix(false)); ?>/faq/">FAQ</a> for further information.</li>
 
 		</ul>
 	<?php }
@@ -3963,7 +3965,7 @@ class GeneralStats {
 	*/
 
 	function callback_settings_dashboard() { ?>
-		If you enable one of the next options, <?php echo($this->get_nicename()); ?> will show your stats either as a <a href="index.php">Dashboard Widget</a> or in the Right-Now-Box on the <a href="index.php">Dashboard</a>. You can also choose the necessary <a target="_blank" href="http://codex.wordpress.org/Roles_and_Capabilities">capability</a>.
+		If you enable one of the next options, <?php echo($this->get_nicename()); ?> will show your stats either as a <a href="index.php">Dashboard Widget</a> or in the Right-Now-Box on the <a href="index.php">Dashboard</a>. You can also choose the necessary <a target="_blank" href="https://codex.wordpress.org/Roles_and_Capabilities">capability</a>.
 
 	<?php }
 
@@ -4002,7 +4004,7 @@ class GeneralStats {
 
 			<li>If you select to <em>Include HTML-Tags in Word-Counts</em>, not only 'real text' but also HTML and JavaScript tags will be counted.</li>
 
-			<li>If you want to keep the stats as a secret, you can deactivate <em>All users can view stats</em>. In that case, only users with the <em><a target="_blank" href="http://codex.wordpress.org/Roles_and_Capabilities">Capability</a> to view stats</em> can access this information.</li>
+			<li>If you want to keep the stats as a secret, you can deactivate <em>All users can view stats</em>. In that case, only users with the <em><a target="_blank" href="https://codex.wordpress.org/Roles_and_Capabilities">Capability</a> to view stats</em> can access this information.</li>
 
 			<li>The <em>Debug Mode</em> can be used to have a look on the actions undertaken by <?php echo($this->get_nicename()); ?> and to investigate unexpected behaviour.</li>
 		</ul>
@@ -4188,8 +4190,6 @@ class WP_Widget_GeneralStats extends WP_Widget {
 	function widget($args, $instance) {
 		global $generalstats;
 
-		extract($args);
-
 		$title = !isset($instance['title']) ? '&nbsp;' : apply_filters('widget_title', $instance['title']);
 
 		$params=array(
@@ -4202,12 +4202,12 @@ class WP_Widget_GeneralStats extends WP_Widget {
 		if (empty($stats))
 			return;
 
-		echo $before_widget;
-		echo $before_title . $title . $after_title;
+		echo $args['before_widget'];
+		echo $args['before_title'] . $title . $args['after_title'];
 
 		echo $stats;
 
-		echo $after_widget;
+		echo $args['after_widget'];
 	}
 
 	/*

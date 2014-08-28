@@ -17,7 +17,7 @@ function generalstats_move_element_up(row) {
 	update the lists
 	*/
 
-	generalstats_update_drag_and_drop_lists();
+	generalstats_update_lists();
 }
 
 /*
@@ -39,12 +39,38 @@ function generalstats_move_element_down(row) {
 	update the lists
 	*/
 
-	generalstats_update_drag_and_drop_lists();
+	generalstats_update_lists();
+}
+
+/*
+moves an element
+to the other list
+*/
+
+function generalstats_move_element(row) {
+
+	/*
+	move the element to other list
+	*/
+
+	var current=jQuery('#generalstats_stat_'+row);
+
+	if (current.parent('ul').attr('id')=='generalstats_list_selected')
+		current.appendTo('#generalstats_list_available');
+
+	else if (current.parent('ul').attr('id') =='generalstats_list_available')
+		current.appendTo('#generalstats_list_selected');
+
+	/*
+	update the lists
+	*/
+
+	generalstats_update_lists();
 }
 
 /*
 initializes the
-drag_and_drop lists
+drag and drop lists
 */
 
 function generalstats_initialize_drag_and_drop() {
@@ -71,13 +97,13 @@ function generalstats_initialize_drag_and_drop() {
 	*/
 
 	jQuery('#generalstats_list_selected').on('sortstop sortreceive sortremove', function() {
-		generalstats_update_drag_and_drop_lists();
+		generalstats_update_lists();
 	});
 }
 
 /*
 returns the sorted ids of a
-drag_and_drop list
+stats list
 */
 
 function generalstats_get_sorted_ids(list) {
@@ -120,12 +146,12 @@ function generalstats_get_sorted_ids(list) {
 }
 
 /*
-sets list height of drag_and_drop list
+sets list height of stats list
 according to the number of elements
 */
 
 function generalstats_set_list_height(list, sorted_ids) {
-	var element_height=32;
+	var element_height=34;
 
 	/*
 	calculate new list height of list_selected
@@ -144,11 +170,11 @@ function generalstats_set_list_height(list, sorted_ids) {
 }
 
 /*
-drag and drop lists update function
+stats lists update function
 updates stats textfields
 */
 
-function generalstats_update_drag_and_drop_lists() {
+function generalstats_update_lists() {
 
 	/*
 	get sorted ids of
@@ -200,8 +226,8 @@ for selected field
 in edit panel
 */
 
-function generalstats_populate_drag_and_drop(key) {
-	generalstats_populate_drag_and_drop_set_value(key, false);
+function generalstats_populate_list_edit(key) {
+	generalstats_populate_list_edit_set_value(key, false);
 }
 
 /*
@@ -210,8 +236,8 @@ for selected field
 in edit panel
 */
 
-function generalstats_populate_drag_and_drop_default() {
-	generalstats_populate_drag_and_drop_set_value(jQuery('#generalstats_edit_selected_stat').val(), true);
+function generalstats_populate_list_edit_default() {
+	generalstats_populate_list_edit_set_value(jQuery('#generalstats_edit_selected_stat').val(), true);
 
 	generalstats_change_entry();
 }
@@ -222,7 +248,7 @@ if reset is set to false, the user's value
 will be loaded
 */
 
-function generalstats_populate_drag_and_drop_set_value(key, reset) {
+function generalstats_populate_list_edit_set_value(key, reset) {
 	jQuery('.generalstats_sortablelist').removeClass('generalstats_sortablelist_active');
 
 	for (var i=0; i<generalstats_keys.length; i++) {
@@ -282,14 +308,16 @@ function generalstats_change_entry() {
 	if (field_name.length>0) {
 
 		/*
-		adopt field-value in list
+		adopt field-value in
+		manual selection section
 		*/
 
 		jQuery('#generalstats_stat_desc_'+field_name).val(jQuery('#generalstats_edit_text').val());
 		jQuery('#generalstats_edit').effect('highlight', {color:'#30df8b'}, 1000);
 
 		/*
-		adopt drag and drop table
+		adopt list element in
+		selection gui section
 		*/
 
 		for (var i=0; i<generalstats_keys.length; i++) {

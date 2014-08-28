@@ -40,7 +40,7 @@ function generalstats_open_section(section) {
 
 - hides settings-page-menu and
 displays all settings-page-sections
-except drag-and-drop
+except selection_gui
 
 if viewport < 440px
 */
@@ -53,7 +53,7 @@ function generalstats_resize_settings_page() {
 
 			jQuery('#generalstats_menu').hide();
 			jQuery('#generalstats_form_settings > div').show();
-			jQuery('#generalstats_drag_and_drop').hide();
+			jQuery('#generalstats_selection_gui').hide();
 		}
 	}
 

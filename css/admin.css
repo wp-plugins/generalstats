@@ -76,13 +76,11 @@ ul.generalstats_sortablelist {
 	margin: 15px 0px 5px 1px;
 }
 
-img.generalstats_arrowbutton {
-	vertical-align: bottom;
+.generalstats_dashicons {
 	cursor: pointer;
-	margin-left: 5px;
 }
 
-#generalstats_drag_and_drop {
+#generalstats_selection_gui {
 	display: none;
 }
 

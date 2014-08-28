@@ -144,7 +144,7 @@ function generalstats_register_refresh(params, query_params) {
 	window.setInterval(function(){
 			generalstats_refresh(params, query_params);
 		},
-		parseInt(generalstats_refresh_settings.refresh_time*1000, 10)
+		parseInt(generalstats_refresh_settings.refresh_time, 10)*1000
 	);
 }
 

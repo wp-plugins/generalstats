@@ -2,35 +2,35 @@
 Contributors: neoxx
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=TGPC4W9DUSWUS
 Tags: statistics, stats, analytics, count, user, category, post, comment, page, link, tag, link-category, seo, widget, dashboard, sidebar, shortcode, multisite, multi-site, ajax, javascript, jquery
-Requires at least: 3.3
-Tested up to: 3.9
+Requires at least: 3.8
+Tested up to: 4.0
 Stable tag: trunk
 License: GPLv3 or later
-License URI: http://www.gnu.org/licenses/gpl-3.0.html
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 
 == Description ==
 
-* fully optionpage-configurable
+* fully settings page configurable with GUI or manually
 * easy to integrate (ships with multi/sidebar- and dashboard-widget functionality)
 * possible to integrate in "Right Now" box or to display as widget on the dashboard
 * high performing with caching technology and customizable memory usage
 * optional Ajax refresh with jQuery
-* fully compatible with [https/SSL/TLS-sites](http://codex.wordpress.org/Administration_Over_SSL)
+* fully compatible with [https/SSL/TLS-sites](https://codex.wordpress.org/Administration_Over_SSL)
 * stats-update by e-mail
-* drag and drop admin menu page
-* [API for developers](http://wordpress.org/plugins/generalstats/other_notes/)
+* [API for developers](https://wordpress.org/plugins/generalstats/other_notes/)
 * fully multisite network compatible
 * clean uninstall
 
 Please find the version for WordPress
 
-* 3.3 and higher [here](http://downloads.wordpress.org/plugin/generalstats.zip)
-* 2.8 to 3.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.8-3.2.zip)
-* 2.3 to 2.7 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.3-2.7.zip)
-* 2.1 and 2.2 [here](http://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
-* minor 2.1 [here](http://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
+* 3.8 and higher [here](https://downloads.wordpress.org/plugin/generalstats.zip)
+* 3.3 to 3.7 [here](https://downloads.wordpress.org/plugin/generalstats.wordpress3.3-3.7.zip)
+* 2.8 to 3.2 [here](https://downloads.wordpress.org/plugin/generalstats.wordpress2.8-3.2.zip)
+* 2.3 to 2.7 [here](https://downloads.wordpress.org/plugin/generalstats.wordpress2.3-2.7.zip)
+* 2.1 and 2.2 [here](https://downloads.wordpress.org/plugin/generalstats.wordpress2.1-2.2.zip)
+* minor 2.1 [here](https://downloads.wordpress.org/plugin/generalstats.wordpressminor2.1.zip)
 
 **Plugin's website:** [http://www.bernhard-riedl.com/projects/](http://www.bernhard-riedl.com/projects/)
 
@@ -44,7 +44,7 @@ Please find the version for WordPress
 
 3. Navigate to the Settings/GeneralStats tab and customize the stats according to your desires.
 
-4. If you have widget functionality just drag and drop GeneralStats on your widget area in the Appearance Menu. Add additional [function and shortcode calls](http://wordpress.org/plugins/generalstats/other_notes/) according to your desires.
+4. If you have widget functionality just drag and drop GeneralStats on your widget area in the Appearance Menu. Add additional [function and shortcode calls](https://wordpress.org/plugins/generalstats/other_notes/) according to your desires.
 
 5. Be happy and celebrate! (and maybe you want to add a link to [http://www.bernhard-riedl.com/projects/](http://www.bernhard-riedl.com/projects/))
 
@@ -60,11 +60,11 @@ Nevertheless, for smaller weblogs the default value of 100 "Rows at once" should
 
 = Why do the Links & Link-Categories stats not work? =
 
-In [WordPress 3.5 and higher the Link Manager (aka Blogroll) has been deactivated by default](https://core.trac.wordpress.org/ticket/21307). - In order to re-activate it you need to download the [Link Manager Plugin](http://wordpress.org/plugins/link-manager/).
+In [WordPress 3.5 and higher the Link Manager (aka Blogroll) has been deactivated by default](https://core.trac.wordpress.org/ticket/21307). - In order to re-activate it you need to download the [Link Manager Plugin](https://wordpress.org/plugins/link-manager/).
 
-= Why can't I see the 'Drag and Drop' section? =
+= Why can't I see the 'Selection GUI' section? =
 
-This section is based on JavaScript. Thus, you have to enable JavaScript in your browser (this is a default setting in modern browsers like [Mozilla Firefox](http://en.wikipedia.org/wiki/Firefox) or [Google Chrome](http://en.wikipedia.org/wiki/Google_Chrome)). GeneralStats is still fully functional without JavaScript, but you need to customize your stats manually. If you use a device with a smaller display (e.g. mobile phone), this section will also be hidden.
+This section is based on JavaScript. Thus, you have to enable JavaScript in your browser (this is a default setting in modern browsers like [Mozilla Firefox](https://en.wikipedia.org/wiki/Firefox) or [Google Chrome](https://en.wikipedia.org/wiki/Google_Chrome)). GeneralStats is still fully functional without JavaScript, but you need to customize your stats manually. If you use a device with a smaller display (e.g. mobile phone), this section will also be hidden.
 
 == Other Notes ==
 
@@ -74,7 +74,7 @@ This section is based on JavaScript. Thus, you have to enable JavaScript in your
 
 With GeneralStats 2.00 and higher you can use a function-call to display individual stat(-blocks) on different positions on your page.
 
-Parameters can either be passed [as an array or a URL query type string (e.g. "display=0&format=0")](http://codex.wordpress.org/Function_Reference/wp_parse_args). Please note that WordPress parses all arguments as strings, thus booleans have to be 0 or 1 if used in query type strings whereas for arrays [real booleans](http://php.net/manual/en/language.types.boolean.php) should be used. Furthermore you have to use the prefix `stats_` to select different stats in a query_string. - For example: `stat_0=Community&stat_12=Pages Word-Count`.
+Parameters can either be passed [as an array or a URL query type string (e.g. "display=0&format=0")](https://codex.wordpress.org/Function_Reference/wp_parse_args). Please note that WordPress parses all arguments as strings, thus booleans have to be 0 or 1 if used in query type strings whereas for arrays [real booleans](https://php.net/manual/en/language.types.boolean.php) should be used. Furthermore you have to use the prefix `stats_` to select different stats in a query_string. - For example: `stat_0=Community&stat_12=Pages Word-Count`.
 
 **`function $generalstats->count($params=array())`**
 
@@ -165,7 +165,7 @@ $generalstats->output($params);
 
 = Shortcodes =
 
-[How-to for shortcodes](http://codex.wordpress.org/Shortcode_API)
+[How-to for shortcodes](https://codex.wordpress.org/Shortcode_API)
 
 **General Example:**
 
@@ -185,13 +185,13 @@ Invokes `$generalstats->count($params)`.
 
 = Filters =
 
-[How-To for filters](http://codex.wordpress.org/Function_Reference/add_filter)
+[How-To for filters](https://codex.wordpress.org/Function_Reference/add_filter)
 
 **Available Filters:**
 
 `generalstats_defaults`
 
-In case you want to set the default parameters globally rather than handing them over on every function call, you can add the [filter](http://codex.wordpress.org/Function_Reference/add_filter) `generalstats_defaults` in for example generalstats.php or your [own customization plugin](http://codex.wordpress.org/Writing_a_Plugin) (recommended).
+In case you want to set the default parameters globally rather than handing them over on every function call, you can add the [filter](https://codex.wordpress.org/Function_Reference/add_filter) `generalstats_defaults` in for example generalstats.php or your [own customization plugin](https://codex.wordpress.org/Writing_a_Plugin) (recommended).
 
 Please note that parameters which you hand over to a function call (`$generalstats->output` or `$generalstats->count`) will always override the defaults parameters, even if they have been set by a filter or in the admin menu.
 
@@ -209,11 +209,15 @@ Receives an array which is used for the mail-stats-function call to `$generalsta
 
 == Screenshots ==
 
-1. This screenshot shows the Settings/GeneralStats Tab with the Drag and Drop Section in the Admin Menu.
+1. This screenshot shows the Settings/GeneralStats Tab with the Selection GUI Section in the Admin Menu.
 
 2. This picture presents the Preview Section of the GeneralStats Tab in the Admin Menu.
 
 == Upgrade Notice ==
+
+= 3.20 =
+
+GeneralStats v3.20 needs at least WordPress 3.8.
 
 = 3.00 =
 
@@ -224,6 +228,19 @@ This is a general code clean-up. - Please note that for GeneralStats v3.00 you n
 This is not only a feature but also a security update. - Thus, I'd strongly recommend all users of GeneralStats which have at least an environment of WordPress 2.8 or higher and PHP 5 to install this version!
 
 == Changelog ==
+
+= 3.20 =
+
+* made settings-page retina/hdpi-display ready
+* adopted settings-page to be fully touch-display enabled
+* renamed settings-page sections
+* added "Auto-Submitted: auto-generated" to mail-headers
+* moved vendor-code to separate directory
+* fixed small potential bug
+* cleaned-up code
+* implemented minor design changes
+* SSLified links
+* added assets/icons
 
 = 3.10 =
 
@@ -271,12 +288,12 @@ This is not only a feature but also a security update. - Thus, I'd strongly reco
 
 = 2.31 =
 
-* fixed a bug with Ajax-update functionality in a SSL-environment. Thanks to huyz who has mentioned this in the forum http://wordpress.org/support/topic/plugin-generalstats-makes-https-call-to-admin-ajax-even-if-site-is-http
+* fixed a bug with Ajax-update functionality in a SSL-environment. Thanks to huyz who has mentioned this in the forum https://wordpress.org/support/topic/plugin-generalstats-makes-https-call-to-admin-ajax-even-if-site-is-http
 
 = 2.30 =
 
 * revised the security model (replaced option `Allow anonymous Ajax Refresh Requests` with `All users can view stats` and added the option `Capability to view stats` to define the capability of a certain user to access the stats)
-* de-coupling of Ajax-refresh-functions and output of `wp_localize_script` (GeneralStats is now compatible with [WP Minify](http://wordpress.org/plugins/wp-minify/))
+* de-coupling of Ajax-refresh-functions and output of `wp_localize_script` (GeneralStats is now compatible with [WP Minify](https://wordpress.org/plugins/wp-minify/))
 * small enhancements
 
 = 2.20 =

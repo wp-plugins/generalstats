@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 3.20
+Version: 3.21
 Author URI: http://www.bernhard-riedl.com/
 */
 
@@ -1745,7 +1745,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.20\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.21\"/>\n");
 	}
 
 	/*
@@ -2390,7 +2390,7 @@ class GeneralStats {
 		*/
 
 		if ($stat==0 && defined('SABRE_TABLE'))
-			$sql_stat="u.ID) FROM $wpdb->users as u, ".esc_sql(SABRE_TABLE)." as s, $wpdb->usermeta as m WHERE u.ID = m.user_id AND m.meta_key = '".$wpdb->prefix."capabilities' AND u.ID=s.user_id AND s.status in ('ok') UNION SELECT COUNT(u.ID) FROM $wpdb->users as u LEFT JOIN ".esc_sql(SABRE_TABLE)." as s ON u.ID=s.user_id WHERE s.user_id IS NULL";
+			$sql_stat="u.ID) FROM $wpdb->users as u, ".sanitize_key(SABRE_TABLE)." as s, $wpdb->usermeta as m WHERE u.ID = m.user_id AND m.meta_key = '".$wpdb->prefix."capabilities' AND u.ID=s.user_id AND s.status in ('ok') UNION SELECT COUNT(u.ID) FROM $wpdb->users as u LEFT JOIN ".sanitize_key(SABRE_TABLE)." as s ON u.ID=s.user_id WHERE s.user_id IS NULL";
 
 		/*
 		query
@@ -3191,7 +3191,7 @@ class GeneralStats {
 		*/
 
 		if (!current_user_can($permissions))
-			wp_die(__('You do not have sufficient permissions to display this page.'));
+			wp_die(__('You do not have sufficient permissions to access this page.'), '', array('response' => 403));
 
 		/*
 		option-page html
@@ -3202,7 +3202,7 @@ class GeneralStats {
 
 		<?php call_user_func(array($this, 'callback_'.$section_prefix.'_intro')); ?>
 
-		<div id="<?php echo($this->get_prefix()); ?>menu" style="display:none"><ul class="subsubsub <?php echo($this->get_prefix(false)); ?>">
+		<nav role="navigation" id="<?php echo($this->get_prefix()); ?>menu" style="display:none"><ul class="subsubsub <?php echo($this->get_prefix(false)); ?>">
 		<?php
 
 		$menu='';
@@ -3214,7 +3214,7 @@ class GeneralStats {
 
 		echo($menu);
 		?>
-		</ul></div>
+		</ul></nav>
 
 		<div id="<?php echo($this->get_prefix()); ?>content" class="<?php echo($this->get_prefix()); ?>wrap">
 
@@ -3609,9 +3609,9 @@ class GeneralStats {
 			arrows
 			*/
 
-			$up_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
-			$down_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
-			$move_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
+			$up_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
+			$down_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
+			$move_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
 
 			/*
 			add stat to list-selected
@@ -3631,9 +3631,9 @@ class GeneralStats {
 			arrows
 			*/
 
-			$up_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
-			$down_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
-			$move_arrow='<div class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
+			$up_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-up" onclick="'.$this->get_prefix().'move_element_up('.$key.');" title="move element up"></div>';
+			$down_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-arrow-down" style="margin-right:5px" onclick="'.$this->get_prefix().'move_element_down('.$key.');" title="move element down"></div>';
+			$move_arrow='<div role="button" class="'.$this->get_prefix().'dashicons dashicons dashicons-leftright" style="margin-right:15px" onclick="'.$this->get_prefix().'move_element('.$key.');" title="move element to other list"></div>';
 
 			/*
 			add stat to list-available
@@ -4242,68 +4242,3 @@ class WP_Widget_GeneralStats extends WP_Widget {
 	}
 
 }
-
-/*
-UNINSTALL
-*/
-
-function generalstats_uninstall() {
- 
-		/*
-		security check
-		*/
-
-		if (!current_user_can('manage_options'))
-			wp_die(__('You do not have sufficient permissions to manage options for this blog.'));
-
-		/*
-		delete option-array
-		*/
-
-		delete_option('generalstats');
-
-		/*
-		delete widget-options
-		*/
-
-		delete_option('widget_generalstats');
-
-		/*
-		invalidate cache-block
-		*/
-
-		set_transient('generalstats', '', -1);
-
-		/*
-		delete transient cache-block
-		*/
-
-		delete_transient('generalstats');
-
-		$stats=array(0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12);
-
-		foreach($stats as $stat) {
-
-			$transient='generalstats_stat_'.$stat;
-
-			/*
-			invalidate individual stat-cache
-			*/
-
-			set_transient($transient, '', -1);
-
-			/*
-			delete individual stat-transient
-			*/
-
-			delete_transient($transient);
-		}
-
-		/*
-		remove cron-entries for mail_stats
-		*/
-
-		wp_clear_scheduled_hook('generalstats_mail_stats');
-	}
-
-register_uninstall_hook(__FILE__, 'generalstats_uninstall');

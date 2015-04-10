@@ -5,14 +5,14 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 3.21
+Version: 3.22
 Author URI: http://www.bernhard-riedl.com/
 */
 
 /*
-Copyright 2006-2014 Dr. Bernhard Riedl
+Copyright 2006-2015 Dr. Bernhard Riedl
 
-Inspirations & Proof-Reading 2007-2014
+Inspirations & Proof-Reading 2007-2015
 by Veronika Grascher
 
 This program is free software:
@@ -1529,7 +1529,7 @@ class GeneralStats {
 		*/
 
 		if (!$this->get_option('all_users_can_view_stats') && !current_user_can($this->get_option('view_stats_capability')))
-			die('-1');
+			wp_die(-1, '', array('response' => 403));
 
 		$security_string=$action.str_replace(array('\n', "\n"), '', $query_string);
 
@@ -1745,7 +1745,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.21\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.22\"/>\n");
 	}
 
 	/*

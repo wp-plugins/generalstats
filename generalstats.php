@@ -5,7 +5,7 @@ Plugin Name: GeneralStats
 Plugin URI: http://www.bernhard-riedl.com/projects/
 Description: Counts the number of users, categories, posts, comments, pages, links, tags, link-categories, words in posts, words in comments and words in pages.
 Author: Dr. Bernhard Riedl
-Version: 3.22
+Version: 3.30
 Author URI: http://www.bernhard-riedl.com/
 */
 
@@ -417,14 +417,6 @@ class GeneralStats {
 
 		add_action('deleted_user', array($this, 'force_page_cache_refresh'));
 		add_action('remove_user_from_blog', array($this, 'force_page_cache_refresh'));
-
-		/*
-		Sabre Cooperation on 'deny early login'
-		https://wordpress.org/plugins/sabre/
-		*/
-
-		add_action('sabre_accepted_registration', array($this, 'force_user_cache_refresh'));
-		add_action('sabre_cancelled_registration', array($this, 'force_user_cache_refresh'));
 
 		/*
 		posts & pages
@@ -1717,14 +1709,6 @@ class GeneralStats {
 	function admin_init() {
 		register_setting($this->get_prefix(false), $this->get_prefix(false), array($this, 'settings_validate'));
 
-		/*
-		Sabre Cooperation on 'deny early login'
-		https://wordpress.org/plugins/sabre/
-		*/
-
-		if (defined('SABRE_TABLE'))
-			$this->options_page_sections['manual_selection']['fields']['0'].='<br />(in Cooperation with <a href="'.admin_url('tools.php?page=sabre').'">Sabre</a>)';
-
 		$this->add_settings_sections($this->options_page_sections, 'settings');
 	}
 
@@ -1745,7 +1729,7 @@ class GeneralStats {
 	*/
 
 	function head_meta() {
-		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.22\"/>\n");
+		echo("<meta name=\"".$this->get_nicename()."\" content=\"3.30\"/>\n");
 	}
 
 	/*
@@ -2385,14 +2369,6 @@ class GeneralStats {
 		$sql_stat=$this->get_stat_sql_statement($stat);
 
 		/*
-		Sabre Cooperation on 'deny early login'
-		https://wordpress.org/plugins/sabre/
-		*/
-
-		if ($stat==0 && defined('SABRE_TABLE'))
-			$sql_stat="u.ID) FROM $wpdb->users as u, ".sanitize_key(SABRE_TABLE)." as s, $wpdb->usermeta as m WHERE u.ID = m.user_id AND m.meta_key = '".$wpdb->prefix."capabilities' AND u.ID=s.user_id AND s.status in ('ok') UNION SELECT COUNT(u.ID) FROM $wpdb->users as u LEFT JOIN ".sanitize_key(SABRE_TABLE)." as s ON u.ID=s.user_id WHERE s.user_id IS NULL";
-
-		/*
 		query
 		*/
 
@@ -2411,14 +2387,6 @@ class GeneralStats {
 			throw new Exception('error while counting stat '.$this->get_stat_name($stat));
 
 		$result=$results[0];
-
-		/*
-		Sabre Cooperation on 'deny early login'
-		https://wordpress.org/plugins/sabre/
-		*/
-
-		if ($stat==0 && defined('SABRE_TABLE'))
-			$result+=$results[1];
 
 		return $result;
 	}
@@ -3197,8 +3165,12 @@ class GeneralStats {
 		option-page html
 		*/
 
+		global $wp_version;
+
+		$h_level=(version_compare($wp_version, '4.3', '>=')) ? '1' : '2';
+
 		?><div class="wrap">
-		<h2><?php echo($this->get_nicename()); ?></h2>
+		<h<?php echo($h_level); ?>><?php echo($this->get_nicename()); ?></h<?php echo($h_level); ?>>
 
 		<?php call_user_func(array($this, 'callback_'.$section_prefix.'_intro')); ?>
 
